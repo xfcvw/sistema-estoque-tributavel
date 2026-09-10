@@ -12,6 +12,25 @@ import java.util.function.Function;
 /** Centraliza as regras de cadastro, movimentação e relatório do estoque. */
 public final class EstoqueTributavel {
     private final Map<String, Produto> produtos = new LinkedHashMap<>();
+    private RegimeTributario regimeTributario;
+
+    /** Cria o estoque já associado a um regime tributário. */
+    public EstoqueTributavel(RegimeTributario regimeTributario) {
+        definirRegimeTributario(regimeTributario);
+    }
+
+    public RegimeTributario getRegimeTributario() {
+        return regimeTributario;
+    }
+
+    /** Permite simular a mesma loja em outro regime tributário. */
+    public void definirRegimeTributario(RegimeTributario regimeTributario) {
+        if (regimeTributario == null) {
+            throw new IllegalArgumentException("Regime tributário obrigatório.");
+        }
+
+        this.regimeTributario = regimeTributario;
+    }
 
     /** Cadastra o produto apenas se ainda não existir outro com o mesmo código. */
     public void cadastrar(Produto produto) {
@@ -71,11 +90,17 @@ public final class EstoqueTributavel {
     }
 
     public BigDecimal getTributoTotalEstimado() {
-        return somar(Produto::getValorTributoEstoque);
+        return regimeTributario.calcularTributo(getValorTotalSemTributo());
     }
 
     public BigDecimal getValorTotalComTributo() {
-        return somar(Produto::getValorEstoqueComTributo);
+        return getValorTotalSemTributo().add(getTributoTotalEstimado());
+    }
+
+    /** Calcula o tributo estimado de um produto no regime selecionado. */
+    public BigDecimal calcularTributoDoProduto(Produto produto) {
+        Objects.requireNonNull(produto, "Produto obrigatório.");
+        return regimeTributario.calcularTributo(produto.getValorEstoqueSemTributo());
     }
 
     /** Aplica um cálculo a todos os produtos e devolve a soma final. */
