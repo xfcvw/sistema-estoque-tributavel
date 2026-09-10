@@ -1,6 +1,5 @@
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Objects;
 
 /**
  * Representa um produto cadastrado no estoque.
@@ -12,6 +11,7 @@ public final class Produto {
     private final String categoria;
     private final BigDecimal precoUnitario;
     private final int estoqueMinimo;
+    private final String codigoFuncionarioResponsavel;
     private int quantidadeEmEstoque;
 
     public Produto(
@@ -20,7 +20,8 @@ public final class Produto {
             String categoria,
             BigDecimal precoUnitario,
             int quantidadeInicial,
-            int estoqueMinimo
+            int estoqueMinimo,
+            String codigoFuncionarioResponsavel
     ) {
         this.codigo = validarCodigo(codigo);
         this.nome = validarTexto(nome, "Nome");
@@ -28,6 +29,10 @@ public final class Produto {
         this.precoUnitario = validarPreco(precoUnitario);
         this.quantidadeEmEstoque = validarQuantidade(quantidadeInicial, "Quantidade inicial");
         this.estoqueMinimo = validarQuantidade(estoqueMinimo, "Estoque mínimo");
+        this.codigoFuncionarioResponsavel = Pessoa.validarCodigo(
+                codigoFuncionarioResponsavel,
+                "FUN"
+        );
     }
 
     public String getCodigo() {
@@ -52,6 +57,10 @@ public final class Produto {
 
     public int getQuantidadeEmEstoque() {
         return quantidadeEmEstoque;
+    }
+
+    public String getCodigoFuncionarioResponsavel() {
+        return codigoFuncionarioResponsavel;
     }
 
     /** Adiciona uma quantidade positiva ao estoque. */
@@ -91,9 +100,11 @@ public final class Produto {
     }
 
     private static String validarCodigo(String valor) {
-        String codigo = Objects.requireNonNull(valor, "Código obrigatório.")
-                .trim()
-                .toUpperCase();
+        if (valor == null) {
+            throw new IllegalArgumentException("Código obrigatório.");
+        }
+
+        String codigo = valor.trim().toUpperCase();
 
         if (!codigo.matches("[A-Z0-9-]{3,20}")) {
             throw new IllegalArgumentException(
@@ -105,7 +116,11 @@ public final class Produto {
     }
 
     private static String validarTexto(String valor, String campo) {
-        String texto = Objects.requireNonNull(valor, campo + " obrigatório.").trim();
+        if (valor == null) {
+            throw new IllegalArgumentException(campo + " obrigatório.");
+        }
+
+        String texto = valor.trim();
 
         if (texto.length() < 2 || texto.length() > 80) {
             throw new IllegalArgumentException(campo + " deve ter entre 2 e 80 caracteres.");
