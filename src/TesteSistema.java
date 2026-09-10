@@ -12,6 +12,7 @@ public class TesteSistema {
         testarBloqueiosDeEntradaInvalida();
         testarProtecaoContraEstoqueInsuficiente();
         testarCalculoTributavel();
+        testarTrocaDeRegimeTributario();
 
         System.out.println("\nTodos os " + aprovados + " testes passaram.");
     }
@@ -36,13 +37,12 @@ public class TesteSistema {
 
     private static void testarBloqueiosDeEntradaInvalida() {
         // Cada chamada abaixo usa um dado que a regra de negócio deve bloquear.
-        esperarErro(() -> new Produto("x", "A", "B", new BigDecimal("10"), 0, 0, BigDecimal.ZERO), "código curto");
-        esperarErro(() -> new Produto("ABC", "Arroz", "Alimento", new BigDecimal("10.999"), 0, 0, BigDecimal.ZERO), "preço com mais de duas casas");
-        esperarErro(() -> new Produto("ABC", "Arroz", "Alimento", new BigDecimal("10"), -1, 0, BigDecimal.ZERO), "estoque inicial negativo");
-        esperarErro(() -> new Produto("ABC", "Arroz", "Alimento", new BigDecimal("10"), 0, 0, new BigDecimal("100.01")), "alíquota acima de 100");
+        esperarErro(() -> new Produto("x", "A", "B", new BigDecimal("10"), 0, 0), "código curto");
+        esperarErro(() -> new Produto("ABC", "Arroz", "Alimento", new BigDecimal("10.999"), 0, 0), "preço com mais de duas casas");
+        esperarErro(() -> new Produto("ABC", "Arroz", "Alimento", new BigDecimal("10"), -1, 0), "estoque inicial negativo");
 
         EstoqueTributavel estoque = novoEstoqueComProduto();
-        esperarErro(() -> estoque.cadastrar(new Produto("ABC-101", "Outro", "Teste", new BigDecimal("1"), 0, 0, BigDecimal.ZERO)), "código duplicado");
+        esperarErro(() -> estoque.cadastrar(new Produto("ABC-101", "Outro", "Teste", new BigDecimal("1"), 0, 0)), "código duplicado");
         esperarErro(() -> estoque.registrarEntrada("ABC-101", 0), "entrada zero");
         esperarErro(() -> estoque.buscarPorCodigo("NAO-EXISTE"), "produto inexistente");
     }
@@ -62,22 +62,40 @@ public class TesteSistema {
     private static void testarCalculoTributavel() {
         EstoqueTributavel estoque = novoEstoqueComProduto();
 
-        // 10 x R$ 20 = R$ 200; tributo de 18% = R$ 36.
+        // 10 x R$ 20 = R$ 200; Simples Nacional estimado em 6% = R$ 12.
         verificar(estoque.getValorTotalSemTributo().compareTo(new BigDecimal("200.00")) == 0, "valor sem tributo incorreto");
-        verificar(estoque.getTributoTotalEstimado().compareTo(new BigDecimal("36.00")) == 0, "tributo incorreto");
-        verificar(estoque.getValorTotalComTributo().compareTo(new BigDecimal("236.00")) == 0, "valor com tributo incorreto");
+        verificar(estoque.getTributoTotalEstimado().compareTo(new BigDecimal("12.00")) == 0, "tributo incorreto");
+        verificar(estoque.getValorTotalComTributo().compareTo(new BigDecimal("212.00")) == 0, "valor com tributo incorreto");
+    }
+
+    private static void testarTrocaDeRegimeTributario() {
+        EstoqueTributavel estoque = novoEstoqueComProduto();
+
+        estoque.definirRegimeTributario(RegimeTributario.LUCRO_PRESUMIDO);
+        verificar(
+                estoque.getTributoTotalEstimado().compareTo(new BigDecimal("22.66")) == 0,
+                "Lucro Presumido deveria usar a alíquota estimada de 11,33%"
+        );
+
+        estoque.definirRegimeTributario(RegimeTributario.LUCRO_REAL);
+        verificar(
+                estoque.getTributoTotalEstimado().compareTo(new BigDecimal("30.00")) == 0,
+                "Lucro Real deveria usar a alíquota estimada de 15%"
+        );
+
+        esperarErro(() -> RegimeTributario.porOpcao(4), "opção de regime inexistente");
+        esperarErro(() -> estoque.definirRegimeTributario(null), "regime nulo");
     }
 
     private static EstoqueTributavel novoEstoqueComProduto() {
-        EstoqueTributavel estoque = new EstoqueTributavel();
+        EstoqueTributavel estoque = new EstoqueTributavel(RegimeTributario.SIMPLES_NACIONAL);
         Produto produto = new Produto(
                 "ABC-101",
                 "Arroz Tipo 1",
                 "Alimentos",
                 new BigDecimal("20.00"),
                 10,
-                3,
-                new BigDecimal("18.00")
+                3
         );
 
         estoque.cadastrar(produto);
