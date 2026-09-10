@@ -6,16 +6,17 @@ Pequenos comércios precisam controlar a quantidade de seus produtos e conhecer 
 
 ## Objetivos
 
-1. Cadastrar produtos e impedir códigos repetidos.
-2. Registrar entradas e saídas de forma segura.
-3. Alertar quando um item alcança seu estoque mínimo.
-4. Escolher ou alterar o regime tributário: Simples Nacional, Lucro Presumido ou Lucro Real.
-5. Calcular valor do estoque, tributos estimados e total com tributos conforme o regime selecionado.
-6. Impedir que erros de digitação deixem o estoque em situação inválida.
+1. Cadastrar funcionários, clientes e produtos com códigos únicos.
+2. Exigir um funcionário cadastrado como responsável pelo cadastro e pelas entradas de produtos.
+3. Registrar saídas/vendas somente para clientes cadastrados.
+4. Alertar quando um item alcança seu estoque mínimo.
+5. Escolher ou alterar o regime tributário: Simples Nacional, Lucro Presumido ou Lucro Real.
+6. Calcular valor do estoque, tributos estimados e total com tributos conforme o regime selecionado.
+7. Impedir que erros de digitação deixem o estoque em situação inválida.
 
 ## Diferencial
 
-Além do controle de quantidade, a mesma loja pode ser simulada nos três regimes tributários. A carga estimada muda imediatamente no relatório quando o regime é alterado. O projeto também usa `BigDecimal` para valores financeiros — evitando imprecisões de `double` — e possui testes automatizados de robustez. Eles tentam enviar dados indevidos e confirmam que o sistema bloqueia a ação sem alterar o estoque já cadastrado.
+Além do controle de quantidade, o produto fica associado ao funcionário que o cadastrou. Entradas também exigem identificação do funcionário, enquanto saídas/vendas exigem um cliente válido. A mesma loja pode ser simulada nos três regimes tributários. A carga estimada muda imediatamente no relatório quando o regime é alterado. O projeto usa `BigDecimal` para valores financeiros — evitando imprecisões de `double` — e possui 62 testes automatizados de robustez.
 
 ## Regimes tributários da simulação
 
@@ -32,6 +33,11 @@ Além do controle de quantidade, a mesma loja pode ser simulada nos três regime
 | Regra | Comportamento do sistema |
 | --- | --- |
 | Código | 3 a 20 caracteres; somente letras, números e hífen; único no cadastro. |
+| Código de funcionário | Formato `FUN-001` até `FUN-999999`; único. |
+| Código de cliente | Formato `CLI-001` até `CLI-999999`; único. |
+| Funcionário | Deve existir antes de cadastrar um produto ou registrar uma entrada. |
+| Cliente | Deve existir antes de registrar uma saída/venda. |
+| Opções do menu | Aceitam apenas um algarismo de `0` a `9`; valores como `10` ou texto são bloqueados. |
 | Preço | Positivo e com até duas casas decimais. |
 | Regime tributário | Deve ser Simples Nacional, Lucro Presumido ou Lucro Real. |
 | Quantidades | Nunca podem ser negativas; entrada e saída devem ser maiores que zero. |
@@ -46,11 +52,22 @@ INÍCIO
     escolher regime tributário
     mostrar menu
     ler opção
-    se opção = cadastrar
+    se opção = cadastrar funcionário ou cliente
+      ler e validar os dados da pessoa
+      impedir código repetido
+      salvar cadastro
+    senão se opção = cadastrar produto
       ler dados do produto
+      validar funcionário responsável
       validar dados e código único
       cadastrar produto
-    senão se opção = entrada ou saída
+    senão se opção = entrada
+      validar funcionário responsável
+      localizar produto pelo código
+      validar quantidade
+      atualizar estoque
+    senão se opção = saída/venda
+      validar cliente
       localizar produto pelo código
       validar quantidade
       se saída for maior que estoque
@@ -75,9 +92,13 @@ flowchart TD
     inicio([Início]) --> regime[Escolher regime tributário]
     regime --> menu[Mostrar menu e ler opção]
     menu --> opcao{Opção escolhida}
-    opcao -->|Cadastrar| cadastro[Ler e validar dados]
+    opcao -->|Cadastrar pessoa| pessoa[Validar cliente ou funcionário]
+    pessoa --> salvarPessoa[Salvar cadastro]
+    opcao -->|Cadastrar produto| cadastro[Ler produto e validar funcionário]
     cadastro --> salvar[Cadastrar produto]
-    opcao -->|Entrada ou saída| movimento[Buscar produto e validar quantidade]
+    opcao -->|Entrada| entrada[Validar funcionário e quantidade]
+    entrada --> atualizar[Atualizar estoque]
+    opcao -->|Venda| movimento[Validar cliente e produto]
     movimento --> suficiente{Saída cabe no estoque?}
     suficiente -->|Não| erro[Exibir mensagem de erro]
     suficiente -->|Sim| atualizar[Atualizar estoque]
@@ -85,6 +106,7 @@ flowchart TD
     trocarRegime --> menu
     opcao -->|Relatório| relatorio[Aplicar alíquota do regime]
     salvar --> menu
+    salvarPessoa --> menu
     atualizar --> menu
     erro --> menu
     relatorio --> menu
@@ -96,9 +118,10 @@ Assim, uma saída maior que a quantidade disponível volta ao menu sem modificar
 
 ## Como demonstrar na apresentação
 
-1. Escolha `Simples Nacional` e cadastre um produto com preço `20,00` e quantidade `10`.
-2. Mostre o relatório: valor de estoque `R$ 200,00`, tributo estimado `R$ 12,00` e total `R$ 212,00`.
-3. Altere para `Lucro Presumido`: o mesmo estoque passa a ter tributo estimado de `R$ 22,66`.
-4. Tente retirar `11` itens: o sistema deve bloquear e informar estoque insuficiente.
-5. Consulte o produto e mostre que a quantidade continua `10`.
-6. Execute `TesteSistema` para apresentar os testes automáticos.
+1. Escolha `Simples Nacional`, cadastre `FUN-001` e depois `CLI-001`.
+2. Cadastre um produto com preço `20,00`, quantidade `10` e funcionário responsável `FUN-001`.
+3. Registre uma venda de `3` unidades para `CLI-001` e mostre que o estoque passa para `7`.
+4. Mostre o relatório: a tributação usa o regime escolhido e informa o total de clientes e funcionários.
+5. Digite `10` como opção do menu: o sistema deve bloquear porque aceita somente um dígito.
+6. Tente retirar uma quantidade maior que o estoque: o sistema deve bloquear e manter o estoque correto.
+7. Execute `TesteSistema` para apresentar os 62 testes automáticos.
