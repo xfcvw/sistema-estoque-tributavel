@@ -15,17 +15,19 @@ public class Main {
 
         try {
             estoque = new EstoqueTributavel(lerRegimeTributario());
-            int opcao;
+            int opcao = -1;
 
             // O menu só encerra quando a pessoa escolhe a opção 0.
             do {
                 mostrarMenu();
-                opcao = lerInteiro("Opção: ");
 
                 try {
+                    opcao = lerOpcao("Opção: ");
                     executarOpcao(opcao);
                 } catch (IllegalArgumentException e) {
                     System.out.println("\nErro: " + e.getMessage());
+                    // Mantém o menu aberto depois de uma opção ou dado inválido.
+                    opcao = -1;
                 }
             } while (opcao != 0);
 
@@ -37,28 +39,30 @@ public class Main {
     }
 
     private static void mostrarMenu() {
-        System.out.println("\n1 - Cadastrar produto");
-        System.out.println("2 - Registrar entrada");
-        System.out.println("3 - Registrar saída");
-        System.out.println("4 - Consultar produto");
-        System.out.println("5 - Listar estoque");
-        System.out.println("6 - Produtos no estoque mínimo");
-        System.out.println("7 - Relatório tributável");
-        System.out.println("8 - Alterar regime tributário");
+        System.out.println("\n1 - Cadastrar funcionário");
+        System.out.println("2 - Cadastrar cliente");
+        System.out.println("3 - Cadastrar produto");
+        System.out.println("4 - Registrar entrada (funcionário)");
+        System.out.println("5 - Registrar saída/venda (cliente)");
+        System.out.println("6 - Listar estoque");
+        System.out.println("7 - Produtos no estoque mínimo");
+        System.out.println("8 - Relatório tributável");
+        System.out.println("9 - Alterar regime tributário");
         System.out.println("0 - Sair");
     }
 
     /** Direciona a opção escolhida para o método correspondente. */
     private static void executarOpcao(int opcao) {
         switch (opcao) {
-            case 1 -> cadastrarProduto();
-            case 2 -> movimentar(true);
-            case 3 -> movimentar(false);
-            case 4 -> exibirProduto(estoque.buscarPorCodigo(lerTexto("Código: ")));
-            case 5 -> listar(estoque.listarProdutos());
-            case 6 -> listar(estoque.listarAbaixoDoMinimo());
-            case 7 -> relatorio();
-            case 8 -> alterarRegimeTributario();
+            case 1 -> cadastrarFuncionario();
+            case 2 -> cadastrarCliente();
+            case 3 -> cadastrarProduto();
+            case 4 -> registrarEntrada();
+            case 5 -> registrarSaidaParaCliente();
+            case 6 -> listar(estoque.listarProdutos());
+            case 7 -> listar(estoque.listarAbaixoDoMinimo());
+            case 8 -> relatorio();
+            case 9 -> alterarRegimeTributario();
             case 0 -> {
                 // Não executa nada: o laço principal terminará.
             }
@@ -73,25 +77,54 @@ public class Main {
                 lerTexto("Categoria: "),
                 lerDecimal("Preço unitário (ex.: 19,90): "),
                 lerInteiroNaoNegativo("Quantidade inicial: "),
-                lerInteiroNaoNegativo("Estoque mínimo: ")
+                lerInteiroNaoNegativo("Estoque mínimo: "),
+                lerTexto("Código do funcionário responsável (ex.: FUN-001): ")
         );
 
-        estoque.cadastrar(produto);
+        estoque.cadastrarProduto(produto);
         System.out.println("Produto cadastrado com sucesso.");
     }
 
-    /** Registra entrada quando entrada é true; saída quando é false. */
-    private static void movimentar(boolean entrada) {
+    private static void cadastrarFuncionario() {
+        Funcionario funcionario = new Funcionario(
+                lerTexto("Código do funcionário (ex.: FUN-001): "),
+                lerTexto("Nome: "),
+                lerTexto("Cargo: ")
+        );
+
+        estoque.cadastrarFuncionario(funcionario);
+        System.out.println("Funcionário cadastrado com sucesso.");
+    }
+
+    private static void cadastrarCliente() {
+        Cliente cliente = new Cliente(
+                lerTexto("Código do cliente (ex.: CLI-001): "),
+                lerTexto("Nome: "),
+                lerTexto("E-mail: ")
+        );
+
+        estoque.cadastrarCliente(cliente);
+        System.out.println("Cliente cadastrado com sucesso.");
+    }
+
+    /** Registra uma entrada e identifica o funcionário que a realizou. */
+    private static void registrarEntrada() {
         String codigo = lerTexto("Código: ");
         int quantidade = lerInteiro("Quantidade: ");
+        String codigoFuncionario = lerTexto("Código do funcionário: ");
 
-        if (entrada) {
-            estoque.registrarEntrada(codigo, quantidade);
-            System.out.println("Entrada registrada com sucesso.");
-        } else {
-            estoque.registrarSaida(codigo, quantidade);
-            System.out.println("Saída registrada com sucesso.");
-        }
+        estoque.registrarEntrada(codigo, quantidade, codigoFuncionario);
+        System.out.println("Entrada registrada com sucesso.");
+    }
+
+    /** Registra uma saída apenas para um cliente previamente cadastrado. */
+    private static void registrarSaidaParaCliente() {
+        String codigo = lerTexto("Código do produto: ");
+        int quantidade = lerInteiro("Quantidade: ");
+        String codigoCliente = lerTexto("Código do cliente: ");
+
+        estoque.registrarSaidaParaCliente(codigo, quantidade, codigoCliente);
+        System.out.println("Saída/venda registrada com sucesso.");
     }
 
     private static void listar(List<Produto> produtos) {
@@ -107,6 +140,7 @@ public class Main {
     private static void exibirProduto(Produto produto) {
         System.out.printf("%n[%s] %s | Categoria: %s%n", produto.getCodigo(), produto.getNome(), produto.getCategoria());
         System.out.printf("Estoque: %d (mínimo: %d)%n", produto.getQuantidadeEmEstoque(), produto.getEstoqueMinimo());
+        System.out.println("Cadastrado por: " + produto.getCodigoFuncionarioResponsavel());
         System.out.printf("Preço: %s%n", MOEDA.format(produto.getPrecoUnitario()));
         System.out.printf(
                 "Tributo estimado (%s): %s%n",
@@ -123,6 +157,8 @@ public class Main {
         System.out.println("Tributos estimados: " + MOEDA.format(estoque.getTributoTotalEstimado()));
         System.out.println("Valor total com tributos: " + MOEDA.format(estoque.getValorTotalComTributo()));
         System.out.println("Itens no mínimo/abaixo: " + estoque.listarAbaixoDoMinimo().size());
+        System.out.println("Clientes cadastrados: " + estoque.listarClientes().size());
+        System.out.println("Funcionários cadastrados: " + estoque.listarFuncionarios().size());
     }
 
     /** Mostra os três regimes e devolve o escolhido pela pessoa usuária. */
@@ -140,7 +176,7 @@ public class Main {
             }
 
             try {
-                return RegimeTributario.porOpcao(lerInteiro("Escolha o regime: "));
+                return RegimeTributario.porOpcao(lerOpcao("Escolha o regime: "));
             } catch (IllegalArgumentException e) {
                 // Uma escolha inválida não encerra o programa; o menu é exibido novamente.
                 System.out.println("Erro: " + e.getMessage());
@@ -173,11 +209,29 @@ public class Main {
         System.out.print(rotulo);
         String valor = proximaLinha().trim();
 
+        if (!valor.matches("-?[0-9]{1,9}")) {
+            throw new IllegalArgumentException("Digite um número inteiro com no máximo 9 algarismos.");
+        }
+
         try {
             return Integer.parseInt(valor);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Digite um número inteiro válido.");
         }
+    }
+
+    /** Opções do menu aceitam somente um algarismo de 0 a 9. */
+    private static int lerOpcao(String rotulo) {
+        System.out.print(rotulo);
+        String valor = proximaLinha().trim();
+
+        if (!valor.matches("[0-9]")) {
+            throw new IllegalArgumentException(
+                    "A opção deve conter somente um algarismo de 0 a 9."
+            );
+        }
+
+        return Integer.parseInt(valor);
     }
 
     /** Aceita vírgula ou ponto no número decimal, comum em valores brasileiros. */
