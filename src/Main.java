@@ -7,27 +7,33 @@ import java.util.Scanner;
 /** Ponto de entrada: mostra o menu e conversa com a pessoa pelo terminal. */
 public class Main {
     private static final Scanner ENTRADA = new Scanner(System.in);
-    private static final EstoqueTributavel ESTOQUE = new EstoqueTributavel();
     private static final NumberFormat MOEDA = NumberFormat.getCurrencyInstance(new Locale("pt", "BR"));
+    private static EstoqueTributavel estoque;
 
     public static void main(String[] args) {
         System.out.println("=== Sistema de Gerenciamento de Estoque Tributável ===");
 
-        int opcao;
+        try {
+            estoque = new EstoqueTributavel(lerRegimeTributario());
+            int opcao;
 
-        // O menu só encerra quando a pessoa escolhe a opção 0.
-        do {
-            mostrarMenu();
-            opcao = lerInteiro("Opção: ");
+            // O menu só encerra quando a pessoa escolhe a opção 0.
+            do {
+                mostrarMenu();
+                opcao = lerInteiro("Opção: ");
 
-            try {
-                executarOpcao(opcao);
-            } catch (IllegalArgumentException e) {
-                System.out.println("\nErro: " + e.getMessage());
-            }
-        } while (opcao != 0);
+                try {
+                    executarOpcao(opcao);
+                } catch (IllegalArgumentException e) {
+                    System.out.println("\nErro: " + e.getMessage());
+                }
+            } while (opcao != 0);
 
-        System.out.println("Sistema encerrado.");
+            System.out.println("Sistema encerrado.");
+        } catch (EntradaEncerradaException e) {
+            // Trata Ctrl+D ou fim de um arquivo de entrada sem mostrar erro técnico.
+            System.out.println("\nEntrada encerrada. Sistema finalizado.");
+        }
     }
 
     private static void mostrarMenu() {
@@ -38,6 +44,7 @@ public class Main {
         System.out.println("5 - Listar estoque");
         System.out.println("6 - Produtos no estoque mínimo");
         System.out.println("7 - Relatório tributável");
+        System.out.println("8 - Alterar regime tributário");
         System.out.println("0 - Sair");
     }
 
@@ -47,10 +54,11 @@ public class Main {
             case 1 -> cadastrarProduto();
             case 2 -> movimentar(true);
             case 3 -> movimentar(false);
-            case 4 -> exibirProduto(ESTOQUE.buscarPorCodigo(lerTexto("Código: ")));
-            case 5 -> listar(ESTOQUE.listarProdutos());
-            case 6 -> listar(ESTOQUE.listarAbaixoDoMinimo());
+            case 4 -> exibirProduto(estoque.buscarPorCodigo(lerTexto("Código: ")));
+            case 5 -> listar(estoque.listarProdutos());
+            case 6 -> listar(estoque.listarAbaixoDoMinimo());
             case 7 -> relatorio();
+            case 8 -> alterarRegimeTributario();
             case 0 -> {
                 // Não executa nada: o laço principal terminará.
             }
@@ -65,11 +73,10 @@ public class Main {
                 lerTexto("Categoria: "),
                 lerDecimal("Preço unitário (ex.: 19,90): "),
                 lerInteiroNaoNegativo("Quantidade inicial: "),
-                lerInteiroNaoNegativo("Estoque mínimo: "),
-                lerDecimal("Alíquota tributária % (ex.: 18): ")
+                lerInteiroNaoNegativo("Estoque mínimo: ")
         );
 
-        ESTOQUE.cadastrar(produto);
+        estoque.cadastrar(produto);
         System.out.println("Produto cadastrado com sucesso.");
     }
 
@@ -79,10 +86,10 @@ public class Main {
         int quantidade = lerInteiro("Quantidade: ");
 
         if (entrada) {
-            ESTOQUE.registrarEntrada(codigo, quantidade);
+            estoque.registrarEntrada(codigo, quantidade);
             System.out.println("Entrada registrada com sucesso.");
         } else {
-            ESTOQUE.registrarSaida(codigo, quantidade);
+            estoque.registrarSaida(codigo, quantidade);
             System.out.println("Saída registrada com sucesso.");
         }
     }
@@ -100,21 +107,55 @@ public class Main {
     private static void exibirProduto(Produto produto) {
         System.out.printf("%n[%s] %s | Categoria: %s%n", produto.getCodigo(), produto.getNome(), produto.getCategoria());
         System.out.printf("Estoque: %d (mínimo: %d)%n", produto.getQuantidadeEmEstoque(), produto.getEstoqueMinimo());
-        System.out.printf("Preço: %s | Tributo: %s%%%n", MOEDA.format(produto.getPrecoUnitario()), produto.getAliquotaTributo().toPlainString());
-        System.out.printf("Valor tributável no estoque: %s%n", MOEDA.format(produto.getValorTributoEstoque()));
+        System.out.printf("Preço: %s%n", MOEDA.format(produto.getPrecoUnitario()));
+        System.out.printf(
+                "Tributo estimado (%s): %s%n",
+                estoque.getRegimeTributario().getDescricao(),
+                MOEDA.format(estoque.calcularTributoDoProduto(produto))
+        );
     }
 
     private static void relatorio() {
         System.out.println("\n--- Relatório de Estoque Tributável ---");
-        System.out.println("Valor dos produtos: " + MOEDA.format(ESTOQUE.getValorTotalSemTributo()));
-        System.out.println("Tributos estimados: " + MOEDA.format(ESTOQUE.getTributoTotalEstimado()));
-        System.out.println("Valor total com tributos: " + MOEDA.format(ESTOQUE.getValorTotalComTributo()));
-        System.out.println("Itens no mínimo/abaixo: " + ESTOQUE.listarAbaixoDoMinimo().size());
+        System.out.println("Regime: " + estoque.getRegimeTributario().getDescricao());
+        System.out.println("Alíquota estimada: " + estoque.getRegimeTributario().getAliquotaEstimada() + "%");
+        System.out.println("Valor dos produtos: " + MOEDA.format(estoque.getValorTotalSemTributo()));
+        System.out.println("Tributos estimados: " + MOEDA.format(estoque.getTributoTotalEstimado()));
+        System.out.println("Valor total com tributos: " + MOEDA.format(estoque.getValorTotalComTributo()));
+        System.out.println("Itens no mínimo/abaixo: " + estoque.listarAbaixoDoMinimo().size());
+    }
+
+    /** Mostra os três regimes e devolve o escolhido pela pessoa usuária. */
+    private static RegimeTributario lerRegimeTributario() {
+        while (true) {
+            System.out.println("\n--- Regime tributário (simulação acadêmica) ---");
+
+            for (RegimeTributario regime : RegimeTributario.values()) {
+                System.out.printf(
+                        "%d - %s (%s%% estimado)%n",
+                        regime.getOpcao(),
+                        regime.getDescricao(),
+                        regime.getAliquotaEstimada().toPlainString()
+                );
+            }
+
+            try {
+                return RegimeTributario.porOpcao(lerInteiro("Escolha o regime: "));
+            } catch (IllegalArgumentException e) {
+                // Uma escolha inválida não encerra o programa; o menu é exibido novamente.
+                System.out.println("Erro: " + e.getMessage());
+            }
+        }
+    }
+
+    private static void alterarRegimeTributario() {
+        estoque.definirRegimeTributario(lerRegimeTributario());
+        System.out.println("Regime tributário alterado com sucesso.");
     }
 
     private static String lerTexto(String rotulo) {
         System.out.print(rotulo);
-        return ENTRADA.nextLine();
+        return proximaLinha();
     }
 
     private static int lerInteiroNaoNegativo(String rotulo) {
@@ -130,7 +171,7 @@ public class Main {
     /** Lê e valida um número inteiro digitado pela pessoa. */
     private static int lerInteiro(String rotulo) {
         System.out.print(rotulo);
-        String valor = ENTRADA.nextLine().trim();
+        String valor = proximaLinha().trim();
 
         try {
             return Integer.parseInt(valor);
@@ -142,12 +183,24 @@ public class Main {
     /** Aceita vírgula ou ponto no número decimal, comum em valores brasileiros. */
     private static BigDecimal lerDecimal(String rotulo) {
         System.out.print(rotulo);
-        String valor = ENTRADA.nextLine().trim().replace(',', '.');
+        String valor = proximaLinha().trim().replace(',', '.');
 
         try {
             return new BigDecimal(valor);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Digite um valor decimal válido.");
         }
+    }
+
+    /** Evita que o programa termine com exceção técnica quando a entrada é fechada. */
+    private static String proximaLinha() {
+        if (!ENTRADA.hasNextLine()) {
+            throw new EntradaEncerradaException();
+        }
+
+        return ENTRADA.nextLine();
+    }
+
+    private static final class EntradaEncerradaException extends RuntimeException {
     }
 }
