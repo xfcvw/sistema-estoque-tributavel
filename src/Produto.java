@@ -4,14 +4,13 @@ import java.util.Objects;
 
 /**
  * Representa um produto cadastrado no estoque.
- * Os dados de identificação e tributação não mudam após o cadastro.
+ * Os dados de identificação e preço não mudam após o cadastro.
  */
 public final class Produto {
     private final String codigo;
     private final String nome;
     private final String categoria;
     private final BigDecimal precoUnitario;
-    private final BigDecimal aliquotaTributo;
     private final int estoqueMinimo;
     private int quantidadeEmEstoque;
 
@@ -21,8 +20,7 @@ public final class Produto {
             String categoria,
             BigDecimal precoUnitario,
             int quantidadeInicial,
-            int estoqueMinimo,
-            BigDecimal aliquotaTributo
+            int estoqueMinimo
     ) {
         this.codigo = validarCodigo(codigo);
         this.nome = validarTexto(nome, "Nome");
@@ -30,7 +28,6 @@ public final class Produto {
         this.precoUnitario = validarPreco(precoUnitario);
         this.quantidadeEmEstoque = validarQuantidade(quantidadeInicial, "Quantidade inicial");
         this.estoqueMinimo = validarQuantidade(estoqueMinimo, "Estoque mínimo");
-        this.aliquotaTributo = validarAliquota(aliquotaTributo);
     }
 
     public String getCodigo() {
@@ -47,10 +44,6 @@ public final class Produto {
 
     public BigDecimal getPrecoUnitario() {
         return precoUnitario;
-    }
-
-    public BigDecimal getAliquotaTributo() {
-        return aliquotaTributo;
     }
 
     public int getEstoqueMinimo() {
@@ -97,18 +90,6 @@ public final class Produto {
         return valor.setScale(2, RoundingMode.HALF_UP);
     }
 
-    /** Calcula o valor estimado de tributo das unidades em estoque. */
-    public BigDecimal getValorTributoEstoque() {
-        return getValorEstoqueSemTributo()
-                .multiply(aliquotaTributo)
-                .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-    }
-
-    /** Soma o valor dos produtos em estoque ao tributo estimado. */
-    public BigDecimal getValorEstoqueComTributo() {
-        return getValorEstoqueSemTributo().add(getValorTributoEstoque());
-    }
-
     private static String validarCodigo(String valor) {
         String codigo = Objects.requireNonNull(valor, "Código obrigatório.")
                 .trim()
@@ -137,19 +118,6 @@ public final class Produto {
         if (valor == null || valor.compareTo(BigDecimal.ZERO) <= 0 || valor.scale() > 2) {
             throw new IllegalArgumentException(
                     "Preço deve ser positivo e ter no máximo duas casas decimais."
-            );
-        }
-
-        return valor.setScale(2, RoundingMode.HALF_UP);
-    }
-
-    private static BigDecimal validarAliquota(BigDecimal valor) {
-        if (valor == null
-                || valor.compareTo(BigDecimal.ZERO) < 0
-                || valor.compareTo(BigDecimal.valueOf(100)) > 0
-                || valor.scale() > 2) {
-            throw new IllegalArgumentException(
-                    "Alíquota deve estar entre 0 e 100, com no máximo duas casas decimais."
             );
         }
 
