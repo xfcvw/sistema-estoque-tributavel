@@ -53,6 +53,29 @@ INÍCIO
 FIM
 ```
 
+## Fluxograma
+
+```mermaid
+flowchart TD
+    inicio([Início]) --> menu[Mostrar menu e ler opção]
+    menu --> opcao{Opção escolhida}
+    opcao -->|Cadastrar| cadastro[Ler e validar dados]
+    cadastro --> salvar[Cadastrar produto]
+    opcao -->|Entrada ou saída| movimento[Buscar produto e validar quantidade]
+    movimento --> suficiente{Saída cabe no estoque?}
+    suficiente -->|Não| erro[Exibir mensagem de erro]
+    suficiente -->|Sim| atualizar[Atualizar estoque]
+    opcao -->|Relatório| relatorio[Somar valores e tributos]
+    salvar --> menu
+    atualizar --> menu
+    erro --> menu
+    relatorio --> menu
+    opcao -->|Sair| fim([Fim])
+```
+
+O fluxo mostra que o sistema só atualiza o estoque depois de validar os dados.
+Assim, uma saída maior que a quantidade disponível volta ao menu sem modificar o produto.
+
 ## Como demonstrar na apresentação
 
 1. Cadastre um produto com preço `20,00`, quantidade `10` e alíquota `18`.
