@@ -46,7 +46,7 @@ public class Main {
         System.out.println("5 - Cadastrar produto");
         System.out.println("6 - Registrar entrada (funcionário)");
         System.out.println("7 - Registrar saída/venda (cliente)");
-        System.out.println("8 - Listar estoque");
+        System.out.println("8 - Consultar estoque");
         System.out.println("9 - Relatórios e regime tributário");
         System.out.println("0 - Sair");
     }
@@ -61,7 +61,7 @@ public class Main {
             case 5 -> cadastrarProduto();
             case 6 -> registrarEntrada();
             case 7 -> registrarSaidaParaCliente();
-            case 8 -> listar(estoque.listarProdutos());
+            case 8 -> menuConsultarEstoque();
             case 9 -> menuRelatoriosERegime();
             case 0 -> {
                 // Não executa nada: o laço principal terminará.
@@ -161,12 +161,14 @@ public class Main {
         System.out.println("Saída/venda registrada com sucesso.");
     }
 
-    private static void listar(List<Produto> produtos) {
+    /** Exibe uma lista de produtos ou uma mensagem específica quando ela estiver vazia. */
+    private static void listarProdutos(String titulo, List<Produto> produtos, String mensagemVazia) {
         if (produtos.isEmpty()) {
-            System.out.println("Nenhum produto encontrado.");
+            System.out.println(mensagemVazia);
             return;
         }
 
+        System.out.println("\n--- " + titulo + " ---");
         produtos.forEach(Main::exibirProduto);
     }
 
@@ -195,24 +197,61 @@ public class Main {
         System.out.println("Funcionários cadastrados: " + estoque.listarFuncionarios().size());
     }
 
-    /** Reúne opções menos frequentes sem ultrapassar um dígito no menu principal. */
-    private static void menuRelatoriosERegime() {
+    /**
+     * Mantém juntas as consultas de estoque: todos os produtos e os itens que
+     * chegaram ao estoque mínimo. Assim as duas opções ficam fáceis de localizar.
+     */
+    private static void menuConsultarEstoque() {
         int opcao = -1;
 
         do {
-            System.out.println("\n--- Relatórios e regime tributário ---");
-            System.out.println("1 - Produtos no estoque mínimo");
-            System.out.println("2 - Relatório tributável");
-            System.out.println("3 - Alterar regime tributário");
+            System.out.println("\n--- Consulta de estoque ---");
+            System.out.println("1 - Listar todos os produtos");
+            System.out.println("2 - Listar produtos no estoque mínimo");
             System.out.println("0 - Voltar");
 
             try {
                 opcao = lerOpcao("Opção: ");
 
                 switch (opcao) {
-                    case 1 -> listar(estoque.listarAbaixoDoMinimo());
-                    case 2 -> relatorio();
-                    case 3 -> alterarRegimeTributario();
+                    case 1 -> listarProdutos(
+                            "Produtos em estoque",
+                            estoque.listarProdutos(),
+                            "Nenhum produto cadastrado no estoque."
+                    );
+                    case 2 -> listarProdutos(
+                            "Produtos no estoque mínimo",
+                            estoque.listarAbaixoDoMinimo(),
+                            "Nenhum produto está no estoque mínimo."
+                    );
+                    case 0 -> {
+                        // Volta para o menu principal.
+                    }
+                    default -> System.out.println("Opção inválida. Escolha uma opção do menu.");
+                }
+            } catch (IllegalArgumentException e) {
+                System.out.println("\nErro: " + e.getMessage());
+                opcao = -1;
+            }
+        } while (opcao != 0);
+    }
+
+    /** Reúne opções menos frequentes sem ultrapassar um dígito no menu principal. */
+    private static void menuRelatoriosERegime() {
+        int opcao = -1;
+
+        do {
+            System.out.println("\n--- Relatórios e regime tributário ---");
+            System.out.println("1 - Relatório tributável");
+            System.out.println("2 - Alterar regime tributário");
+            System.out.println("0 - Voltar");
+
+            try {
+                opcao = lerOpcao("Opção: ");
+
+                switch (opcao) {
+                    case 1 -> relatorio();
+                    case 2 -> alterarRegimeTributario();
                     case 0 -> {
                         // Volta para o menu principal.
                     }

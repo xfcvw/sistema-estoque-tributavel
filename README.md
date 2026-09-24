@@ -13,7 +13,7 @@ Projeto Java para terminal, sem interface gráfica e sem dependências externas.
 - Cadastro de produto com código, categoria, preço, quantidade e estoque mínimo.
 - Produto e entrada vinculados a um funcionário cadastrado.
 - Saída/venda vinculada a um cliente cadastrado.
-- Alerta de produtos no estoque mínimo.
+- Consulta de estoque em submenu: lista todos os produtos ou somente os itens no estoque mínimo.
 - Relatório do valor do estoque, tributos estimados e valor total com tributos conforme o regime escolhido.
 - Opções do menu limitadas a um único algarismo (`0` a `9`).
 - Validação de códigos duplicados, números inválidos, preços inválidos, regime inválido, pessoas inexistentes, produto inexistente e saída maior que o estoque.

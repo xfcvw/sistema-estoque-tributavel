@@ -13,6 +13,7 @@ public class TesteSistema {
         testarValidacoesDeProduto();
         testarValidacoesDeClienteEFuncionario();
         testarBloqueiosDoEstoque();
+        testarListagensDoEstoque();
         testarRegimesTributarios();
         testarColecoesProtegidas();
 
@@ -120,6 +121,28 @@ public class TesteSistema {
         esperarErro(() -> RegimeTributario.porOpcao(0), "opção de regime zero");
         esperarErro(() -> RegimeTributario.porOpcao(4), "opção de regime inexistente");
         esperarErro(() -> RegimeTributario.SIMPLES_NACIONAL.calcularTributo(new BigDecimal("-1")), "valor tributável negativo");
+    }
+
+    /** Confirma que as duas consultas de estoque retornam os produtos esperados. */
+    private static void testarListagensDoEstoque() {
+        EstoqueTributavel estoque = novoEstoqueComCadastros();
+
+        verificar(estoque.listarProdutos().size() == 1, "A listagem do estoque deveria conter o produto cadastrado");
+        verificar(
+                estoque.listarAbaixoDoMinimo().isEmpty(),
+                "Produto acima do mínimo não deve aparecer na listagem de reposição"
+        );
+
+        estoque.registrarSaidaParaCliente("ABC-101", 7, "12345678909");
+
+        verificar(
+                estoque.listarAbaixoDoMinimo().size() == 1,
+                "Produto no mínimo deve aparecer na listagem de reposição"
+        );
+        verificar(
+                estoque.listarAbaixoDoMinimo().get(0).getCodigo().equals("ABC-101"),
+                "A listagem de reposição deveria mostrar o produto correto"
+        );
     }
 
     private static void testarColecoesProtegidas() {
