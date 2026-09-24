@@ -33,7 +33,7 @@ public final class EstoqueTributavel {
         this.regimeTributario = regimeTributario;
     }
 
-    /** Cadastra um cliente apenas se ainda não existir outro com o mesmo código. */
+    /** Cadastra um cliente apenas se ainda não existir outro com o mesmo CPF. */
     public void cadastrarCliente(Cliente cliente) {
         cadastrarPessoa(clientes, cliente, "cliente");
     }
@@ -72,7 +72,7 @@ public final class EstoqueTributavel {
     }
 
     public Cliente buscarCliente(String codigo) {
-        Cliente cliente = clientes.get(normalizarCodigo(codigo));
+        Cliente cliente = clientes.get(normalizarCpf(codigo));
 
         if (cliente == null) {
             throw new IllegalArgumentException("Cliente não encontrado.");
@@ -164,9 +164,9 @@ public final class EstoqueTributavel {
             throw new IllegalArgumentException("Cadastro obrigatório.");
         }
 
-        if (pessoas.putIfAbsent(pessoa.getCodigo(), pessoa) != null) {
+        if (pessoas.putIfAbsent(pessoa.getIdentificador(), pessoa) != null) {
             throw new IllegalArgumentException(
-                    "Já existe um " + tipo + " com o código " + pessoa.getCodigo() + "."
+                    "Já existe um " + tipo + " com o identificador " + pessoa.getIdentificador() + "."
             );
         }
     }
@@ -182,7 +182,21 @@ public final class EstoqueTributavel {
     private static <T extends Pessoa> List<T> listarPessoas(Map<String, T> pessoas) {
         return pessoas.values()
                 .stream()
-                .sorted(Comparator.comparing(Pessoa::getCodigo))
+                .sorted(Comparator.comparing(Pessoa::getIdentificador))
                 .toList();
+    }
+
+    private static String normalizarCpf(String cpf) {
+        if (cpf == null) {
+            throw new IllegalArgumentException("CPF obrigatório.");
+        }
+
+        String somenteNumeros = cpf.trim().replaceAll("[^0-9]", "");
+
+        if (somenteNumeros.length() != 11) {
+            throw new IllegalArgumentException("CPF deve ter 11 dígitos.");
+        }
+
+        return somenteNumeros;
     }
 }

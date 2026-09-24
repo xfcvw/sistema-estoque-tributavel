@@ -41,13 +41,13 @@ public class Main {
     private static void mostrarMenu() {
         System.out.println("\n1 - Cadastrar funcionário");
         System.out.println("2 - Cadastrar cliente");
-        System.out.println("3 - Cadastrar produto");
-        System.out.println("4 - Registrar entrada (funcionário)");
-        System.out.println("5 - Registrar saída/venda (cliente)");
-        System.out.println("6 - Listar estoque");
-        System.out.println("7 - Produtos no estoque mínimo");
-        System.out.println("8 - Relatório tributável");
-        System.out.println("9 - Alterar regime tributário");
+        System.out.println("3 - Listar funcionários");
+        System.out.println("4 - Listar clientes");
+        System.out.println("5 - Cadastrar produto");
+        System.out.println("6 - Registrar entrada (funcionário)");
+        System.out.println("7 - Registrar saída/venda (cliente)");
+        System.out.println("8 - Listar estoque");
+        System.out.println("9 - Relatórios e regime tributário");
         System.out.println("0 - Sair");
     }
 
@@ -56,13 +56,13 @@ public class Main {
         switch (opcao) {
             case 1 -> cadastrarFuncionario();
             case 2 -> cadastrarCliente();
-            case 3 -> cadastrarProduto();
-            case 4 -> registrarEntrada();
-            case 5 -> registrarSaidaParaCliente();
-            case 6 -> listar(estoque.listarProdutos());
-            case 7 -> listar(estoque.listarAbaixoDoMinimo());
-            case 8 -> relatorio();
-            case 9 -> alterarRegimeTributario();
+            case 3 -> listarFuncionarios();
+            case 4 -> listarClientes();
+            case 5 -> cadastrarProduto();
+            case 6 -> registrarEntrada();
+            case 7 -> registrarSaidaParaCliente();
+            case 8 -> listar(estoque.listarProdutos());
+            case 9 -> menuRelatoriosERegime();
             case 0 -> {
                 // Não executa nada: o laço principal terminará.
             }
@@ -98,13 +98,47 @@ public class Main {
 
     private static void cadastrarCliente() {
         Cliente cliente = new Cliente(
-                lerTexto("Código do cliente (ex.: CLI-001): "),
+                lerTexto("CPF do cliente (ex.: 123.456.789-09): "),
                 lerTexto("Nome: "),
                 lerTexto("E-mail: ")
         );
 
         estoque.cadastrarCliente(cliente);
         System.out.println("Cliente cadastrado com sucesso.");
+    }
+
+    private static void listarFuncionarios() {
+        List<Funcionario> funcionarios = estoque.listarFuncionarios();
+
+        if (funcionarios.isEmpty()) {
+            System.out.println("Nenhum funcionário cadastrado.");
+            return;
+        }
+
+        System.out.println("\n--- Funcionários cadastrados ---");
+        funcionarios.forEach(funcionario -> System.out.printf(
+                "[%s] %s | Cargo: %s%n",
+                funcionario.getCodigo(),
+                funcionario.getNome(),
+                funcionario.getCargo()
+        ));
+    }
+
+    private static void listarClientes() {
+        List<Cliente> clientes = estoque.listarClientes();
+
+        if (clientes.isEmpty()) {
+            System.out.println("Nenhum cliente cadastrado.");
+            return;
+        }
+
+        System.out.println("\n--- Clientes cadastrados ---");
+        clientes.forEach(cliente -> System.out.printf(
+                "[CPF: %s] %s | E-mail: %s%n",
+                formatarCpf(cliente.getCpf()),
+                cliente.getNome(),
+                cliente.getEmail()
+        ));
     }
 
     /** Registra uma entrada e identifica o funcionário que a realizou. */
@@ -121,7 +155,7 @@ public class Main {
     private static void registrarSaidaParaCliente() {
         String codigo = lerTexto("Código do produto: ");
         int quantidade = lerInteiro("Quantidade: ");
-        String codigoCliente = lerTexto("Código do cliente: ");
+        String codigoCliente = lerTexto("CPF do cliente: ");
 
         estoque.registrarSaidaParaCliente(codigo, quantidade, codigoCliente);
         System.out.println("Saída/venda registrada com sucesso.");
@@ -159,6 +193,36 @@ public class Main {
         System.out.println("Itens no mínimo/abaixo: " + estoque.listarAbaixoDoMinimo().size());
         System.out.println("Clientes cadastrados: " + estoque.listarClientes().size());
         System.out.println("Funcionários cadastrados: " + estoque.listarFuncionarios().size());
+    }
+
+    /** Reúne opções menos frequentes sem ultrapassar um dígito no menu principal. */
+    private static void menuRelatoriosERegime() {
+        int opcao = -1;
+
+        do {
+            System.out.println("\n--- Relatórios e regime tributário ---");
+            System.out.println("1 - Produtos no estoque mínimo");
+            System.out.println("2 - Relatório tributável");
+            System.out.println("3 - Alterar regime tributário");
+            System.out.println("0 - Voltar");
+
+            try {
+                opcao = lerOpcao("Opção: ");
+
+                switch (opcao) {
+                    case 1 -> listar(estoque.listarAbaixoDoMinimo());
+                    case 2 -> relatorio();
+                    case 3 -> alterarRegimeTributario();
+                    case 0 -> {
+                        // Volta para o menu principal.
+                    }
+                    default -> System.out.println("Opção inválida. Escolha uma opção do menu.");
+                }
+            } catch (IllegalArgumentException e) {
+                System.out.println("\nErro: " + e.getMessage());
+                opcao = -1;
+            }
+        } while (opcao != 0);
     }
 
     /** Mostra os três regimes e devolve o escolhido pela pessoa usuária. */
@@ -256,5 +320,12 @@ public class Main {
     }
 
     private static final class EntradaEncerradaException extends RuntimeException {
+    }
+
+    private static String formatarCpf(String cpf) {
+        return cpf.substring(0, 3) + "."
+                + cpf.substring(3, 6) + "."
+                + cpf.substring(6, 9) + "-"
+                + cpf.substring(9);
     }
 }

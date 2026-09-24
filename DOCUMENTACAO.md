@@ -6,7 +6,7 @@ Pequenos comércios precisam controlar a quantidade de seus produtos e conhecer 
 
 ## Objetivos
 
-1. Cadastrar funcionários, clientes e produtos com códigos únicos.
+1. Cadastrar e listar funcionários, clientes e produtos.
 2. Exigir um funcionário cadastrado como responsável pelo cadastro e pelas entradas de produtos.
 3. Registrar saídas/vendas somente para clientes cadastrados.
 4. Alertar quando um item alcança seu estoque mínimo.
@@ -16,7 +16,7 @@ Pequenos comércios precisam controlar a quantidade de seus produtos e conhecer 
 
 ## Diferencial
 
-Além do controle de quantidade, o produto fica associado ao funcionário que o cadastrou. Entradas também exigem identificação do funcionário, enquanto saídas/vendas exigem um cliente válido. A mesma loja pode ser simulada nos três regimes tributários. A carga estimada muda imediatamente no relatório quando o regime é alterado. O projeto usa `BigDecimal` para valores financeiros — evitando imprecisões de `double` — e possui 62 testes automatizados de robustez.
+Além do controle de quantidade, o produto fica associado ao funcionário que o cadastrou. Entradas também exigem identificação do funcionário, enquanto saídas/vendas exigem um cliente válido identificado pelo CPF. A mesma loja pode ser simulada nos três regimes tributários. A carga estimada muda imediatamente no relatório quando o regime é alterado. O projeto usa `BigDecimal` para valores financeiros — evitando imprecisões de `double` — e possui 65 testes automatizados de robustez.
 
 ## Regimes tributários da simulação
 
@@ -34,7 +34,7 @@ Além do controle de quantidade, o produto fica associado ao funcionário que o 
 | --- | --- |
 | Código | 3 a 20 caracteres; somente letras, números e hífen; único no cadastro. |
 | Código de funcionário | Formato `FUN-001` até `FUN-999999`; único. |
-| Código de cliente | Formato `CLI-001` até `CLI-999999`; único. |
+| CPF do cliente | Aceita `12345678909` ou `123.456.789-09`; valida os 11 dígitos e os verificadores; único. |
 | Funcionário | Deve existir antes de cadastrar um produto ou registrar uma entrada. |
 | Cliente | Deve existir antes de registrar uma saída/venda. |
 | Opções do menu | Aceitam apenas um algarismo de `0` a `9`; valores como `10` ou texto são bloqueados. |
@@ -67,7 +67,7 @@ INÍCIO
       validar quantidade
       atualizar estoque
     senão se opção = saída/venda
-      validar cliente
+      validar CPF do cliente
       localizar produto pelo código
       validar quantidade
       se saída for maior que estoque
@@ -92,13 +92,13 @@ flowchart TD
     inicio([Início]) --> regime[Escolher regime tributário]
     regime --> menu[Mostrar menu e ler opção]
     menu --> opcao{Opção escolhida}
-    opcao -->|Cadastrar pessoa| pessoa[Validar cliente ou funcionário]
+    opcao -->|Cadastrar pessoa| pessoa[Validar CPF do cliente ou funcionário]
     pessoa --> salvarPessoa[Salvar cadastro]
     opcao -->|Cadastrar produto| cadastro[Ler produto e validar funcionário]
     cadastro --> salvar[Cadastrar produto]
     opcao -->|Entrada| entrada[Validar funcionário e quantidade]
     entrada --> atualizar[Atualizar estoque]
-    opcao -->|Venda| movimento[Validar cliente e produto]
+    opcao -->|Venda| movimento[Validar CPF do cliente e produto]
     movimento --> suficiente{Saída cabe no estoque?}
     suficiente -->|Não| erro[Exibir mensagem de erro]
     suficiente -->|Sim| atualizar[Atualizar estoque]
@@ -118,10 +118,10 @@ Assim, uma saída maior que a quantidade disponível volta ao menu sem modificar
 
 ## Como demonstrar na apresentação
 
-1. Escolha `Simples Nacional`, cadastre `FUN-001` e depois `CLI-001`.
+1. Escolha `Simples Nacional`, cadastre `FUN-001` e depois o cliente com CPF fictício `123.456.789-09`.
 2. Cadastre um produto com preço `20,00`, quantidade `10` e funcionário responsável `FUN-001`.
-3. Registre uma venda de `3` unidades para `CLI-001` e mostre que o estoque passa para `7`.
+3. Registre uma venda de `3` unidades para o CPF `123.456.789-09` e mostre que o estoque passa para `7`.
 4. Mostre o relatório: a tributação usa o regime escolhido e informa o total de clientes e funcionários.
 5. Digite `10` como opção do menu: o sistema deve bloquear porque aceita somente um dígito.
 6. Tente retirar uma quantidade maior que o estoque: o sistema deve bloquear e manter o estoque correto.
-7. Execute `TesteSistema` para apresentar os 62 testes automáticos.
+7. Execute `TesteSistema` para apresentar os 65 testes automáticos.
