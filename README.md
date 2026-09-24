@@ -1,10 +1,10 @@
 # Sistema de Gerenciamento de Estoque Tributável
 
-Aplicação Java para terminal que cadastra funcionários, clientes e produtos; controla entradas, vendas, estoque mínimo e uma simulação de tributação por regime: Simples Nacional, Lucro Presumido ou Lucro Real.
+Aplicação Java procedural para terminal que cadastra funcionários, clientes e produtos; controla entradas, vendas, estoque mínimo e uma simulação de tributação por regime: Simples Nacional, Lucro Presumido ou Lucro Real.
 
 > As alíquotas exibidas são estimativas didáticas para o Projeto Integrador; não substituem uma apuração fiscal oficial.
 
-Projeto Java para terminal, sem interface gráfica e sem dependências externas.
+Projeto Java para terminal, sem interface gráfica e sem dependências externas. O código usa vetores, variáveis e métodos `static`, sem POO.
 
 ## Funções
 
@@ -31,9 +31,9 @@ java -cp out Main
 
 ```bash
 javac -d out src/*.java
-java -cp out TesteSistema
+java -cp out Main --teste
 ```
 
-Os 65 testes tentam quebrar regras importantes: códigos duplicados ou inválidos, CPF inválido, campos nulos, e-mail/cargo inválidos, preço fora do limite, estoque negativo, entrada nula, funcionário ou cliente inexistente, regime inexistente, produto inexistente, retirada acima do estoque e proteção das listas internas. Eles também verificam que uma operação rejeitada não altera a quantidade existente.
+Os testes integrados tentam quebrar regras importantes: CPF com letras ou símbolos, CPF inválido, opção com mais de um algarismo, saída maior que o estoque e produto no estoque mínimo.
 
 > Observação: as alíquotas usadas são estimativas definidas para cada regime, adequadas ao objetivo acadêmico. Em uso comercial, a regra tributária deve ser definida com orientação contábil/fiscal.

@@ -16,7 +16,7 @@ Pequenos comércios precisam controlar a quantidade de seus produtos e conhecer 
 
 ## Diferencial
 
-Além do controle de quantidade, o produto fica associado ao funcionário que o cadastrou. Entradas também exigem identificação do funcionário, enquanto saídas/vendas exigem um cliente válido identificado pelo CPF. A mesma loja pode ser simulada nos três regimes tributários. A carga estimada muda imediatamente no relatório quando o regime é alterado. O projeto usa `BigDecimal` para valores financeiros — evitando imprecisões de `double` — e possui 65 testes automatizados de robustez.
+Além do controle de quantidade, cada posição dos vetores de produto fica associada ao código do funcionário que realizou o cadastro. Entradas também exigem identificação do funcionário, enquanto saídas/vendas exigem um cliente válido identificado pelo CPF. A mesma loja pode ser simulada nos três regimes tributários. A carga estimada muda imediatamente no relatório quando o regime é alterado. O projeto é procedural e usa vetores, variáveis e métodos `static`, sem POO.
 
 ## Regimes tributários da simulação
 
@@ -34,7 +34,7 @@ Além do controle de quantidade, o produto fica associado ao funcionário que o 
 | --- | --- |
 | Código | 3 a 20 caracteres; somente letras, números e hífen; único no cadastro. |
 | Código de funcionário | Formato `FUN-001` até `FUN-999999`; único. |
-| CPF do cliente | Aceita `12345678909` ou `123.456.789-09`; valida os 11 dígitos e os verificadores; único. |
+| CPF do cliente | Aceita somente `12345678909`; valida os 11 dígitos e os verificadores; único. |
 | Funcionário | Deve existir antes de cadastrar um produto ou registrar uma entrada. |
 | Cliente | Deve existir antes de registrar uma saída/venda. |
 | Opções do menu | Aceitam apenas um algarismo de `0` a `9`; valores como `10` ou texto são bloqueados. |
@@ -118,10 +118,10 @@ Assim, uma saída maior que a quantidade disponível volta ao menu sem modificar
 
 ## Como demonstrar na apresentação
 
-1. Escolha `Simples Nacional`, cadastre `FUN-001` e depois o cliente com CPF fictício `123.456.789-09`.
+1. Escolha `Simples Nacional`, cadastre `FUN-001` e depois o cliente com CPF fictício `12345678909`.
 2. Cadastre um produto com preço `20,00`, quantidade `10` e funcionário responsável `FUN-001`.
-3. Registre uma venda de `3` unidades para o CPF `123.456.789-09` e mostre que o estoque passa para `7`.
+3. Registre uma venda de `3` unidades para o CPF `12345678909` e mostre que o estoque passa para `7`.
 4. Mostre o relatório: a tributação usa o regime escolhido e informa o total de clientes e funcionários.
 5. Digite `10` como opção do menu: o sistema deve bloquear porque aceita somente um dígito.
 6. Tente retirar uma quantidade maior que o estoque: o sistema deve bloquear e manter o estoque correto.
-7. Execute `TesteSistema` para apresentar os 65 testes automáticos.
+7. Execute `Main --teste` para apresentar os testes de validação do programa procedural.
