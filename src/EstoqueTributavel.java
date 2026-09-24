@@ -191,10 +191,10 @@ public final class EstoqueTributavel {
             throw new IllegalArgumentException("CPF obrigatório.");
         }
 
-        String somenteNumeros = cpf.trim().replaceAll("[^0-9]", "");
+        String somenteNumeros = cpf.trim();
 
-        if (somenteNumeros.length() != 11) {
-            throw new IllegalArgumentException("CPF deve ter 11 dígitos.");
+        if (!somenteNumeros.matches("[0-9]{11}")) {
+            throw new IllegalArgumentException("CPF deve conter somente 11 números.");
         }
 
         return somenteNumeros;

@@ -98,7 +98,7 @@ public class Main {
 
     private static void cadastrarCliente() {
         Cliente cliente = new Cliente(
-                lerTexto("CPF do cliente (ex.: 123.456.789-09): "),
+                lerTexto("CPF do cliente (11 números): "),
                 lerTexto("Nome: "),
                 lerTexto("E-mail: ")
         );
@@ -155,7 +155,7 @@ public class Main {
     private static void registrarSaidaParaCliente() {
         String codigo = lerTexto("Código do produto: ");
         int quantidade = lerInteiro("Quantidade: ");
-        String codigoCliente = lerTexto("CPF do cliente: ");
+        String codigoCliente = lerTexto("CPF do cliente (11 números): ");
 
         estoque.registrarSaidaParaCliente(codigo, quantidade, codigoCliente);
         System.out.println("Saída/venda registrada com sucesso.");

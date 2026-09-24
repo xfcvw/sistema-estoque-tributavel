@@ -26,7 +26,7 @@ public class TesteSistema {
         estoque.registrarEntrada("ABC-101", 5, "FUN-001");
         verificar(quantidadeDoArroz(estoque) == 15, "Entrada deveria aumentar o estoque");
 
-        estoque.registrarSaidaParaCliente("ABC-101", 3, "123.456.789-09");
+        estoque.registrarSaidaParaCliente("ABC-101", 3, "12345678909");
         verificar(quantidadeDoArroz(estoque) == 12, "Venda deveria diminuir o estoque");
         verificar(estoque.listarClientes().size() == 1, "Cliente deveria estar cadastrado");
         verificar(estoque.listarFuncionarios().size() == 1, "Funcionário deveria estar cadastrado");
@@ -59,13 +59,15 @@ public class TesteSistema {
 
     private static void testarValidacoesDeClienteEFuncionario() {
         esperarErro(() -> new Cliente(null, "Cliente", "cliente@email.com"), "CPF nulo");
-        esperarErro(() -> new Cliente("123.456.789-09", null, "cliente@email.com"), "nome de cliente nulo");
-        esperarErro(() -> new Cliente("123.456.789-09", "Cliente", null), "e-mail nulo");
+        esperarErro(() -> new Cliente("12345678909", null, "cliente@email.com"), "nome de cliente nulo");
+        esperarErro(() -> new Cliente("12345678909", "Cliente", null), "e-mail nulo");
         esperarErro(() -> new Cliente("123", "Cliente", "cliente@email.com"), "CPF curto");
-        esperarErro(() -> new Cliente("111.111.111-11", "Cliente", "cliente@email.com"), "CPF repetido inválido");
-        esperarErro(() -> new Cliente("123.456.789-00", "Cliente", "cliente@email.com"), "CPF com dígitos verificadores inválidos");
-        esperarErro(() -> new Cliente("123.456.789-09", "C", "cliente@email.com"), "nome de cliente curto");
-        esperarErro(() -> new Cliente("123.456.789-09", "Cliente", "email-invalido"), "e-mail inválido");
+        esperarErro(() -> new Cliente("123.456.789-09", "Cliente", "cliente@email.com"), "CPF com pontuação");
+        esperarErro(() -> new Cliente("1234567890A", "Cliente", "cliente@email.com"), "CPF com letra");
+        esperarErro(() -> new Cliente("11111111111", "Cliente", "cliente@email.com"), "CPF repetido inválido");
+        esperarErro(() -> new Cliente("12345678900", "Cliente", "cliente@email.com"), "CPF com dígitos verificadores inválidos");
+        esperarErro(() -> new Cliente("12345678909", "C", "cliente@email.com"), "nome de cliente curto");
+        esperarErro(() -> new Cliente("12345678909", "Cliente", "email-invalido"), "e-mail inválido");
         esperarErro(() -> new Funcionario(null, "Funcionário", "Caixa"), "código de funcionário nulo");
         esperarErro(() -> new Funcionario("FUN-002", null, "Caixa"), "nome de funcionário nulo");
         esperarErro(() -> new Funcionario("FUN-002", "Funcionário", null), "cargo nulo");
@@ -90,9 +92,10 @@ public class TesteSistema {
         esperarErro(() -> estoque.calcularTributoDoProduto(null), "produto nulo no cálculo tributário");
         verificar(
                 estoque.buscarCliente("12345678909").getNome().equals("João Lima"),
-                "Busca de cliente sem pontuação deveria funcionar"
+                "Busca de cliente com 11 números deveria funcionar"
         );
-        esperarErro(() -> estoque.buscarCliente("529.982.247-25"), "cliente inexistente");
+        esperarErro(() -> estoque.buscarCliente("CPF 12345678909"), "busca de cliente com letras");
+        esperarErro(() -> estoque.buscarCliente("52998224725"), "cliente inexistente");
         esperarErro(() -> estoque.buscarFuncionario("FUN-999"), "funcionário inexistente");
         esperarErro(() -> estoque.registrarEntrada("ABC-101", 0, "FUN-001"), "entrada zero");
         esperarErro(() -> estoque.registrarEntrada("ABC-101", -1, "FUN-001"), "entrada negativa");
@@ -157,7 +160,7 @@ public class TesteSistema {
     private static EstoqueTributavel novoEstoqueComCadastros() {
         EstoqueTributavel estoque = new EstoqueTributavel(RegimeTributario.SIMPLES_NACIONAL);
         estoque.cadastrarFuncionario(new Funcionario("FUN-001", "Ana Souza", "Estoquista"));
-        estoque.cadastrarCliente(new Cliente("123.456.789-09", "João Lima", "joao@email.com"));
+        estoque.cadastrarCliente(new Cliente("12345678909", "João Lima", "joao@email.com"));
         estoque.cadastrarProduto(criarProduto("ABC-101", "FUN-001"));
         return estoque;
     }

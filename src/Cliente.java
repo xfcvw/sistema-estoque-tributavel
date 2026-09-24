@@ -22,7 +22,7 @@ public final class Cliente extends Pessoa {
         return cpf;
     }
 
-    /** Valida formato e dígitos verificadores do CPF, sem armazenar pontuação. */
+    /** Valida os 11 números do CPF e seus dígitos verificadores. */
     private static String validarCpf(String valor) {
         if (valor == null) {
             throw new IllegalArgumentException("CPF obrigatório.");
@@ -30,11 +30,11 @@ public final class Cliente extends Pessoa {
 
         String texto = valor.trim();
 
-        if (!texto.matches("[0-9]{11}|[0-9]{3}\\.[0-9]{3}\\.[0-9]{3}-[0-9]{2}")) {
-            throw new IllegalArgumentException("CPF deve ter 11 dígitos.");
+        if (!texto.matches("[0-9]{11}")) {
+            throw new IllegalArgumentException("CPF deve conter somente 11 números.");
         }
 
-        String cpf = texto.replaceAll("[^0-9]", "");
+        String cpf = texto;
 
         if (cpf.matches("([0-9])\\1{10}")) {
             throw new IllegalArgumentException("CPF inválido.");
