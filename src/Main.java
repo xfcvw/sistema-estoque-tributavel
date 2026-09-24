@@ -98,7 +98,7 @@ public class Main {
 
     private static void cadastrarCliente() {
         Cliente cliente = new Cliente(
-                lerTexto("CPF do cliente (11 números): "),
+                lerCpf("CPF do cliente (11 números): "),
                 lerTexto("Nome: "),
                 lerTexto("E-mail: ")
         );
@@ -155,7 +155,7 @@ public class Main {
     private static void registrarSaidaParaCliente() {
         String codigo = lerTexto("Código do produto: ");
         int quantidade = lerInteiro("Quantidade: ");
-        String codigoCliente = lerTexto("CPF do cliente (11 números): ");
+        String codigoCliente = lerCpf("CPF do cliente (11 números): ");
 
         estoque.registrarSaidaParaCliente(codigo, quantidade, codigoCliente);
         System.out.println("Saída/venda registrada com sucesso.");
@@ -295,6 +295,24 @@ public class Main {
     private static String lerTexto(String rotulo) {
         System.out.print(rotulo);
         return proximaLinha();
+    }
+
+    /**
+     * Repete a pergunta até receber exatamente 11 algarismos. Em um terminal
+     * padrão, a tecla digitada só é entregue ao Java após Enter; por isso o
+     * valor inválido nunca é aceito nem permite avançar para o próximo campo.
+     */
+    private static String lerCpf(String rotulo) {
+        while (true) {
+            System.out.print(rotulo);
+            String cpf = proximaLinha().trim();
+
+            if (cpf.matches("[0-9]{11}")) {
+                return cpf;
+            }
+
+            System.out.println("CPF inválido. Digite somente 11 números, sem letras ou símbolos.");
+        }
     }
 
     private static int lerInteiroNaoNegativo(String rotulo) {
