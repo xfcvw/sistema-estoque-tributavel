@@ -48,14 +48,20 @@ Além do controle de quantidade, cada posição dos vetores de produto fica asso
 
 ```text
 INÍCIO
+  escolher regime tributário
   enquanto opção for diferente de 0
-    escolher regime tributário
     mostrar menu
     ler opção
-    se opção = cadastrar funcionário ou cliente
-      ler e validar os dados da pessoa
-      impedir código repetido
-      salvar cadastro
+    se opção = cadastrar funcionário
+      ler código, nome e cargo
+      validar código único
+      salvar funcionário
+    senão se opção = cadastrar cliente
+      ler CPF
+      repetir até receber 11 números válidos, sem letras ou símbolos
+      ler nome e e-mail
+      impedir CPF repetido
+      salvar cliente
     senão se opção = cadastrar produto
       ler dados do produto
       validar funcionário responsável
@@ -67,19 +73,20 @@ INÍCIO
       validar quantidade
       atualizar estoque
     senão se opção = saída/venda
-      validar CPF do cliente
+      ler CPF do cliente somente com 11 números válidos
+      validar cliente cadastrado
       localizar produto pelo código
       validar quantidade
       se saída for maior que estoque
         informar erro
       senão
         atualizar estoque
-    senão se opção = alterar regime
-      ler e validar novo regime
-      atualizar regime da loja
-    senão se opção = relatório
-      somar valores e aplicar a alíquota do regime selecionado
-      exibir totais
+    senão se opção = consultar estoque
+      escolher entre listar todos os produtos ou somente estoque mínimo
+      exibir a lista escolhida
+    senão se opção = relatórios e regime
+      escolher entre relatório tributável ou alterar regime
+      exibir totais ou atualizar regime
     fim se
   fim enquanto
 FIM
@@ -90,27 +97,63 @@ FIM
 ```mermaid
 flowchart TD
     inicio([Início]) --> regime[Escolher regime tributário]
-    regime --> menu[Mostrar menu e ler opção]
+    regime --> menu[Mostrar menu]
     menu --> opcao{Opção escolhida}
-    opcao -->|Cadastrar pessoa| pessoa[Validar CPF do cliente ou funcionário]
-    pessoa --> salvarPessoa[Salvar cadastro]
-    opcao -->|Cadastrar produto| cadastro[Ler produto e validar funcionário]
-    cadastro --> salvar[Cadastrar produto]
-    opcao -->|Entrada| entrada[Validar funcionário e quantidade]
-    entrada --> atualizar[Atualizar estoque]
-    opcao -->|Venda| movimento[Validar CPF do cliente e produto]
-    movimento --> suficiente{Saída cabe no estoque?}
-    suficiente -->|Não| erro[Exibir mensagem de erro]
-    suficiente -->|Sim| atualizar[Atualizar estoque]
-    opcao -->|Alterar regime| trocarRegime[Selecionar novo regime]
-    trocarRegime --> menu
-    opcao -->|Relatório| relatorio[Aplicar alíquota do regime]
-    salvar --> menu
-    salvarPessoa --> menu
-    atualizar --> menu
-    erro --> menu
-    relatorio --> menu
-    opcao -->|Sair| fim([Fim])
+
+    opcao -->|1 a 5| cadastro{Pessoas e produtos}
+    opcao -->|6 ou 7| movimento{Movimentação}
+    opcao -->|8| consulta[Consultar estoque]
+    opcao -->|9| relatorio[Relatórios e regime]
+    opcao -->|0 Sair| fim([Fim])
+
+    cadastro -->|1 Funcionário| funcionario[Ler código, nome e cargo]
+    funcionario --> validarFuncionario{Código válido e único?}
+    validarFuncionario -->|Sim| salvarFuncionario[Salvar funcionário]
+    validarFuncionario -->|Não| erroFuncionario[Mostrar erro]
+    cadastro -->|2 Cliente| cliente[Ler CPF, nome e e-mail]
+    cliente --> validarCpf{CPF com 11 números válidos e único?}
+    validarCpf -->|Sim| salvarCliente[Salvar cliente]
+    validarCpf -->|Não| repetirCpf[Repetir campo CPF]
+    repetirCpf --> cliente
+    cadastro -->|3 Listar funcionários| listarFuncionarios[Listar funcionários]
+    cadastro -->|4 Listar clientes| listarClientes[Listar clientes]
+    cadastro -->|5 Produto| produto[Ler dados e funcionário responsável]
+    produto --> validarProduto{Dados válidos e funcionário existe?}
+    validarProduto -->|Sim| salvarProduto[Salvar produto]
+    validarProduto -->|Não| erroProduto[Mostrar erro]
+
+    movimento -->|Entrada| entrada[Validar produto, funcionário e quantidade]
+    entrada --> atualizarEntrada[Somar quantidade ao estoque]
+    movimento -->|Saída| saida[Ler produto, quantidade e CPF do cliente]
+    saida --> validarSaida{Cliente existe e quantidade é válida?}
+    validarSaida -->|Não| erroSaida[Mostrar erro]
+    validarSaida -->|Sim| suficiente{Há estoque suficiente?}
+    suficiente -->|Sim| atualizarSaida[Subtrair quantidade do estoque]
+    suficiente -->|Não| erroEstoque[Mostrar estoque insuficiente]
+
+    consulta --> submenuEstoque{Escolha da consulta}
+    submenuEstoque -->|Todos| listarTodos[Listar todos os produtos]
+    submenuEstoque -->|Mínimo| listarMinimo[Listar produtos no estoque mínimo]
+
+    relatorio --> submenuRelatorio{Escolha do relatório}
+    submenuRelatorio -->|Tributável| calcular[Somar estoque e aplicar alíquota]
+    submenuRelatorio -->|Alterar regime| novoRegime[Escolher novo regime]
+
+    salvarFuncionario --> menu
+    erroFuncionario --> menu
+    salvarCliente --> menu
+    listarFuncionarios --> menu
+    listarClientes --> menu
+    salvarProduto --> menu
+    erroProduto --> menu
+    atualizarEntrada --> menu
+    atualizarSaida --> menu
+    erroSaida --> menu
+    erroEstoque --> menu
+    listarTodos --> menu
+    listarMinimo --> menu
+    calcular --> menu
+    novoRegime --> menu
 ```
 
 O fluxo mostra que o sistema só atualiza o estoque depois de validar os dados.
