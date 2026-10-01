@@ -42,7 +42,8 @@ Além do controle de quantidade, cada posição dos vetores de produto fica asso
 | Regime tributário | Deve ser Simples Nacional, Lucro Presumido ou Lucro Real. |
 | Quantidades | Nunca podem ser negativas; entrada e saída devem ser maiores que zero. |
 | Saída | Não pode ultrapassar o estoque disponível. |
-| Tributo estimado | `(valor total do estoque × alíquota do regime) ÷ 100`. |
+| Alíquota por produto | Cada produto recebe uma alíquota percentual de `0` a `100` no cadastro. |
+| Tributo estimado | Soma de `(valor em estoque de cada produto × alíquota cadastrada) ÷ 100`. |
 
 ## Fluxo principal (pseudocódigo)
 

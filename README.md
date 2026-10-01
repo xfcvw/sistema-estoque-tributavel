@@ -14,7 +14,7 @@ Projeto Java para terminal, sem interface gráfica e sem dependências externas.
 - Produto e entrada vinculados a um funcionário cadastrado.
 - Saída/venda vinculada a um cliente cadastrado.
 - Consulta de estoque em submenu: lista todos os produtos ou somente os itens no estoque mínimo.
-- Relatório do valor do estoque, tributos estimados e valor total com tributos conforme o regime escolhido.
+- Cadastro de alíquota tributária individual por produto e relatório com o total estimado de tributos.
 - Opções do menu limitadas a um único algarismo (`0` a `9`).
 - Validação de códigos duplicados, números inválidos, preços inválidos, regime inválido, pessoas inexistentes, produto inexistente e saída maior que o estoque.
 
@@ -36,4 +36,4 @@ java -cp out Main --teste
 
 Os testes integrados tentam quebrar regras importantes: CPF com letras ou símbolos, CPF inválido, opção com mais de um algarismo, saída maior que o estoque e produto no estoque mínimo.
 
-> Observação: as alíquotas usadas são estimativas definidas para cada regime, adequadas ao objetivo acadêmico. Em uso comercial, a regra tributária deve ser definida com orientação contábil/fiscal.
+> Observação: a alíquota de cada produto é uma estimativa cadastrada para fins acadêmicos. Em uso comercial, ela deve ser definida a partir do NCM, da UF, da operação e de orientação contábil/fiscal.

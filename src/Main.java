@@ -24,6 +24,7 @@ public class Main {
     private static final double[] precoProdutos = new double[LIMITE];
     private static final int[] quantidadeProdutos = new int[LIMITE];
     private static final int[] minimoProdutos = new int[LIMITE];
+    private static final double[] aliquotaProdutos = new double[LIMITE];
     private static final String[] responsavelProdutos = new String[LIMITE];
     private static int totalProdutos;
 
@@ -123,6 +124,7 @@ public class Main {
         precoProdutos[totalProdutos] = lerPreco();
         quantidadeProdutos[totalProdutos] = lerInteiroNaoNegativo("Quantidade inicial: ");
         minimoProdutos[totalProdutos] = lerInteiroNaoNegativo("Estoque mínimo: ");
+        aliquotaProdutos[totalProdutos] = lerAliquota();
         responsavelProdutos[totalProdutos] = responsavel;
         totalProdutos++;
         System.out.println("Produto cadastrado com sucesso.");
@@ -214,7 +216,8 @@ public class Main {
         System.out.printf("Estoque: %d (mínimo: %d)%n", quantidadeProdutos[i], minimoProdutos[i]);
         System.out.println("Cadastrado por: " + responsavelProdutos[i]);
         System.out.printf("Preço: R$ %.2f%n", precoProdutos[i]);
-        System.out.printf("Tributo estimado (%s): R$ %.2f%n", nomeRegime(), valorEstoque * aliquota() / 100);
+        System.out.printf("Alíquota cadastrada: %.2f%%%n", aliquotaProdutos[i]);
+        System.out.printf("Tributo estimado: R$ %.2f%n", valorEstoque * aliquotaProdutos[i] / 100);
     }
 
     private static void menuRelatorios() {
@@ -238,15 +241,17 @@ public class Main {
 
     private static void mostrarRelatorio() {
         double valor = 0;
+        double tributo = 0;
         int noMinimo = 0;
         for (int i = 0; i < totalProdutos; i++) {
             valor += precoProdutos[i] * quantidadeProdutos[i];
+            tributo = tributo + precoProdutos[i] * quantidadeProdutos[i] * aliquotaProdutos[i] / 100;
             if (estaNoMinimo(quantidadeProdutos[i], minimoProdutos[i])) noMinimo++;
         }
-        double tributo = valor * aliquota() / 100;
+        
         System.out.println("\n--- Relatório de Estoque Tributável ---");
         System.out.println("Regime: " + nomeRegime());
-        System.out.printf("Alíquota estimada: %.2f%%%n", aliquota());
+        System.out.println("Alíquotas: calculadas individualmente por produto.");
         System.out.printf("Valor dos produtos: R$ %.2f%n", valor);
         System.out.printf("Tributos estimados: R$ %.2f%n", tributo);
         System.out.printf("Valor total com tributos: R$ %.2f%n", valor + tributo);
@@ -355,6 +360,19 @@ public class Main {
             return preco;
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Digite um preço válido.");
+        }
+    }
+
+    /** Lê a alíquota percentual definida para aquele produto na simulação. */
+    private static double lerAliquota() {
+        try {
+            double aliquota = Double.parseDouble(lerTexto("Alíquota tributária do produto (%): ").replace(',', '.'));
+            if (aliquota < 0 || aliquota > 100 || Double.isInfinite(aliquota) || Double.isNaN(aliquota)) {
+                throw new IllegalArgumentException("Alíquota deve ficar entre 0 e 100.");
+            }
+            return aliquota;
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Digite uma alíquota válida.");
         }
     }
 

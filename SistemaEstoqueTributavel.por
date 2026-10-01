@@ -21,6 +21,7 @@ programa
     cadeia nomeProdutos[LIMITE]
     cadeia categoriaProdutos[LIMITE]
     real precoProdutos[LIMITE]
+    real aliquotaProdutos[LIMITE]
     inteiro quantidadeProdutos[LIMITE]
     inteiro minimoProdutos[LIMITE]
     cadeia responsavelProdutos[LIMITE]
@@ -163,7 +164,7 @@ programa
     funcao cadastrarProduto()
     {
         cadeia codigo, nome, categoria, responsavel
-        real preco
+        real preco, aliquotaProduto
         inteiro quantidade, minimo
 
         se (totalProdutos >= LIMITE)
@@ -198,8 +199,10 @@ programa
         leia(quantidade)
         escreva("Estoque mínimo: ")
         leia(minimo)
+        escreva("Alíquota tributária do produto (%): ")
+        leia(aliquotaProduto)
 
-        se (preco <= 0 ou quantidade < 0 ou minimo < 0)
+        se (preco <= 0 ou quantidade < 0 ou minimo < 0 ou aliquotaProduto < 0 ou aliquotaProduto > 100)
         {
             escreva("Preço e quantidades inválidos.\n")
             retorne
@@ -209,6 +212,7 @@ programa
         nomeProdutos[totalProdutos] = nome
         categoriaProdutos[totalProdutos] = categoria
         precoProdutos[totalProdutos] = preco
+        aliquotaProdutos[totalProdutos] = aliquotaProduto
         quantidadeProdutos[totalProdutos] = quantidade
         minimoProdutos[totalProdutos] = minimo
         responsavelProdutos[totalProdutos] = responsavel
@@ -328,7 +332,7 @@ programa
         {
             se (nao somenteMinimo ou quantidadeProdutos[i] <= minimoProdutos[i])
             {
-                escreva("[", codigoProdutos[i], "] ", nomeProdutos[i], " | Estoque: ", quantidadeProdutos[i], " | Mínimo: ", minimoProdutos[i], "\n")
+                escreva("[", codigoProdutos[i], "] ", nomeProdutos[i], " | Estoque: ", quantidadeProdutos[i], " | Mínimo: ", minimoProdutos[i], " | Alíquota: ", aliquotaProdutos[i], "%\n")
                 encontrou = verdadeiro
             }
         }
@@ -352,15 +356,16 @@ programa
     funcao mostrarRelatorio()
     {
         inteiro i, noMinimo = 0
-        real valor = 0.0, tributo
+        real valor = 0.0, tributo = 0.0
         para (i = 0; i < totalProdutos; i++)
         {
             valor = valor + precoProdutos[i] * quantidadeProdutos[i]
+            tributo = tributo + precoProdutos[i] * quantidadeProdutos[i] * aliquotaProdutos[i] / 100.0
             se (quantidadeProdutos[i] <= minimoProdutos[i]) noMinimo++
         }
-        tributo = valor * aliquota() / 100.0
         escreva("\nRegime: ", nomeRegime(), "\n")
         escreva("Valor dos produtos: R$ ", valor, "\n")
+        escreva("Alíquotas: calculadas individualmente por produto.\n")
         escreva("Tributos estimados: R$ ", tributo, "\n")
         escreva("Valor total: R$ ", valor + tributo, "\n")
         escreva("Itens no mínimo/abaixo: ", noMinimo, "\n")
