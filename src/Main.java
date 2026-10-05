@@ -99,7 +99,7 @@ public class Main {
 
     private static void cadastrarCliente() {
         verificarLimite(totalClientes, "clientes");
-        String cpf = lerCpf("CPF do cliente (11 números): ");
+        String cpf = lerCpf("CPF do cliente (11 números, sem letras e cpf valido): ");
         if (buscarCliente(cpf) != -1) throw new IllegalArgumentException("Cliente já cadastrado.");
 
         cpfClientes[totalClientes] = cpf;
