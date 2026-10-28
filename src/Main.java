@@ -32,11 +32,6 @@ public class Main {
     private static int regime;
 
     public static void main(String[] args) {
-        if (args.length == 1 && args[0].equals("--teste")) {
-            executarTestes();
-            return;
-        }
-
         System.out.println("=== Sistema de Gerenciamento de Estoque Tributável ===");
         regime = lerRegime();
 
@@ -399,19 +394,4 @@ public class Main {
         return cpf.charAt(9) == Character.forDigit(primeiro, 10) && cpf.charAt(10) == Character.forDigit(segundo, 10);
     }
 
-    /** Testes simples: execute com java -cp out Main --teste. */
-    private static void executarTestes() {
-        int aprovados = 0;
-        verificar(!cpfValido("1234567890A"), "CPF com letra deve ser bloqueado"); aprovados++;
-        verificar(!cpfValido("123.456.789-09"), "CPF com símbolo deve ser bloqueado"); aprovados++;
-        verificar(cpfValido("12345678909"), "CPF válido deveria ser aceito"); aprovados++;
-        verificar(!"10".matches("[0-9]"), "Opção com dois caracteres deve ser bloqueada"); aprovados++;
-        verificar(!podeRetirar(3, 7), "Saída maior que estoque deve ser bloqueada"); aprovados++;
-        verificar(estaNoMinimo(3, 3), "Produto no mínimo deve aparecer na consulta"); aprovados++;
-        System.out.println("Todos os " + aprovados + " testes passaram.");
-    }
-
-    private static void verificar(boolean condicao, String mensagem) {
-        if (!condicao) throw new AssertionError(mensagem);
-    }
 }
