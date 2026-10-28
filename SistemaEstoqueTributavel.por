@@ -1,3 +1,6 @@
+// Pseudocódigo alinhado à versão simplificada do programa em Java.
+// Utiliza vetores, funções, decisões e laços de repetição.
+
 programa
 {
     inclua biblioteca Texto --> texto
@@ -190,12 +193,7 @@ programa
             retorne
         }
 
-        responsavel = lerTextoObrigatorio("Código do funcionário responsável: ")
-        se (buscarFuncionario(responsavel) == -1)
-        {
-            escreva("Funcionário não encontrado.\n")
-            retorne
-        }
+        responsavel = lerFuncionarioExistente("Código do funcionário responsável: ")
 
         nome = lerTextoObrigatorio("Nome: ")
         categoria = lerTextoObrigatorio("Categoria: ")
@@ -231,12 +229,7 @@ programa
         }
 
         quantidade = lerInteiroPositivo("Quantidade de entrada: ")
-        funcionario = lerTextoObrigatorio("Código do funcionário: ")
-        se (buscarFuncionario(funcionario) == -1)
-        {
-            escreva("Funcionário não encontrado.\n")
-            retorne
-        }
+        funcionario = lerFuncionarioExistente("Código do funcionário: ")
 
         quantidadeProdutos[produto] = quantidadeProdutos[produto] + quantidade
         escreva("Entrada registrada com sucesso.\n")
@@ -525,6 +518,26 @@ programa
         enquanto (texto.numero_caracteres(valor) < 2 ou texto.numero_caracteres(valor) > 80)
 
         retorne valor
+    }
+
+
+    // Lê o código de um funcionário e repete até encontrar um cadastro existente.
+    funcao cadeia lerFuncionarioExistente(cadeia rotulo)
+    {
+        cadeia codigo
+
+        faca
+        {
+            codigo = lerTextoObrigatorio(rotulo)
+
+            se (buscarFuncionario(codigo) == -1)
+            {
+                escreva("Funcionário não encontrado.\n")
+            }
+        }
+        enquanto (buscarFuncionario(codigo) == -1)
+
+        retorne codigo
     }
 
     // Lê um inteiro sem sinal e com no máximo nove algarismos.
