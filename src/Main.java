@@ -1,6 +1,6 @@
 import java.util.Scanner;
 
-/** Sistema procedural: usa vetores e métodos static, sem POO. */
+// Classe principal do sistema de estoque.
 public class Main {
     private static final Scanner ENTRADA = new Scanner(System.in);
     private static final int LIMITE = 100;
@@ -31,6 +31,7 @@ public class Main {
     // 1 = Simples Nacional, 2 = Lucro Presumido, 3 = Lucro Real.
     private static int regime;
 
+    // Inicia o programa, escolhe o regime e mantém o menu aberto até a opção Sair.
     public static void main(String[] args) {
         System.out.println("=== Sistema de Gerenciamento de Estoque Tributável ===");
         regime = lerRegime();
@@ -50,6 +51,7 @@ public class Main {
         System.out.println("Sistema encerrado.");
     }
 
+    // Mostra as opções principais que o usuário pode escolher.
     private static void mostrarMenu() {
         System.out.println("\n1 - Cadastrar funcionário");
         System.out.println("2 - Cadastrar cliente");
@@ -63,6 +65,7 @@ public class Main {
         System.out.println("0 - Sair");
     }
 
+    // Direciona cada número do menu para a função correspondente.
     private static void executarOpcao(int opcao) {
         switch (opcao) {
             case 1: cadastrarFuncionario(); break;
@@ -79,6 +82,7 @@ public class Main {
         }
     }
 
+    // Cadastra um funcionário que poderá registrar produtos e entradas.
     private static void cadastrarFuncionario() {
         verificarLimite(totalFuncionarios, "funcionários");
         String codigo = lerTexto("Código do funcionário (FUN-001): ").toUpperCase();
@@ -92,6 +96,7 @@ public class Main {
         System.out.println("Funcionário cadastrado com sucesso.");
     }
 
+    // Cadastra um cliente usando CPF válido e sem duplicidade.
     private static void cadastrarCliente() {
         verificarLimite(totalClientes, "clientes");
         String cpf = lerCpf("CPF do cliente (11 números, sem letras e cpf valido): ");
@@ -104,6 +109,7 @@ public class Main {
         System.out.println("Cliente cadastrado com sucesso.");
     }
 
+    // Cadastra o produto, sua quantidade inicial e a alíquota informada.
     private static void cadastrarProduto() {
         verificarLimite(totalProdutos, "produtos");
         String codigo = lerTexto("Código do produto: ").toUpperCase();
@@ -125,6 +131,7 @@ public class Main {
         System.out.println("Produto cadastrado com sucesso.");
     }
 
+    // Soma ao estoque a quantidade recebida de um produto já cadastrado.
     private static void registrarEntrada() {
         int produto = buscarProduto(lerTexto("Código do produto: ").toUpperCase());
         if (produto == -1) throw new IllegalArgumentException("Produto não encontrado.");
@@ -137,6 +144,7 @@ public class Main {
         System.out.println("Entrada registrada com sucesso.");
     }
 
+    // Registra uma venda e diminui o estoque somente se houver quantidade disponível.
     private static void registrarSaida() {
         int produto = buscarProduto(lerTexto("Código do produto: ").toUpperCase());
         if (produto == -1) throw new IllegalArgumentException("Produto não encontrado.");
@@ -151,6 +159,7 @@ public class Main {
         System.out.println("Saída/venda registrada com sucesso.");
     }
 
+    // Lista todos os funcionários cadastrados no sistema.
     private static void listarFuncionarios() {
         if (totalFuncionarios == 0) {
             System.out.println("Nenhum funcionário cadastrado.");
@@ -162,6 +171,7 @@ public class Main {
         }
     }
 
+    // Lista nome, CPF e e-mail dos clientes cadastrados.
     private static void listarClientes() {
         if (totalClientes == 0) {
             System.out.println("Nenhum cliente cadastrado.");
@@ -173,6 +183,7 @@ public class Main {
         }
     }
 
+    // Abre o submenu para consultar todos os produtos ou apenas os que estão no mínimo.
     private static void menuEstoque() {
         int opcao = -1;
         do {
@@ -192,7 +203,7 @@ public class Main {
         } while (opcao != 0);
     }
 
-    /** Mostra todos os produtos ou somente os que chegaram ao estoque mínimo. */
+    // Mostra todos os produtos ou somente os que chegaram ao estoque mínimo.
     private static void listarProdutos(boolean somenteMinimo) {
         boolean encontrou = false;
         for (int i = 0; i < totalProdutos; i++) {
@@ -205,6 +216,7 @@ public class Main {
         if (!encontrou) System.out.println(somenteMinimo ? "Nenhum produto está no estoque mínimo." : "Nenhum produto cadastrado.");
     }
 
+    // Exibe os dados completos de um produto encontrado na consulta.
     private static void exibirProduto(int i) {
         double valorEstoque = precoProdutos[i] * quantidadeProdutos[i];
         System.out.printf("%n[%s] %s | Categoria: %s%n", codigoProdutos[i], nomeProdutos[i], categoriaProdutos[i]);
@@ -215,6 +227,7 @@ public class Main {
         System.out.printf("Tributo estimado: R$ %.2f%n", valorEstoque * aliquotaProdutos[i] / 100);
     }
 
+    // Abre as opções de relatório tributável e alteração de regime.
     private static void menuRelatorios() {
         int opcao = -1;
         do {
@@ -234,6 +247,7 @@ public class Main {
         } while (opcao != 0);
     }
 
+    // Calcula o valor dos produtos, a estimativa de tributos e os itens no mínimo.
     private static void mostrarRelatorio() {
         double valor = 0;
         double tributo = 0;
@@ -253,6 +267,7 @@ public class Main {
         System.out.println("Itens no mínimo/abaixo: " + noMinimo);
     }
 
+    // Lê o regime tributário escolhido e aceita apenas as opções de 1 a 3.
     private static int lerRegime() {
         while (true) {
             System.out.println("\n1 - Simples Nacional | 2 - Lucro Presumido | 3 - Lucro Real");
@@ -262,6 +277,7 @@ public class Main {
         }
     }
 
+    // Converte o número do regime no nome que será mostrado no relatório.
     private static String nomeRegime() {
         if (regime == 1) return "Simples Nacional";
         if (regime == 2) return "Lucro Presumido";
@@ -274,42 +290,48 @@ public class Main {
         return 15.00;
     }
 
+    // Procura um cliente pelo CPF e devolve a posição no vetor.
     private static int buscarCliente(String cpf) {
         for (int i = 0; i < totalClientes; i++) if (cpfClientes[i].equals(cpf)) return i;
         return -1;
     }
 
+    // Procura um funcionário pelo código e devolve a posição no vetor.
     private static int buscarFuncionario(String codigo) {
         for (int i = 0; i < totalFuncionarios; i++) if (codigoFuncionarios[i].equals(codigo)) return i;
         return -1;
     }
 
+    // Procura um produto pelo código e devolve a posição no vetor.
     private static int buscarProduto(String codigo) {
         for (int i = 0; i < totalProdutos; i++) if (codigoProdutos[i].equals(codigo)) return i;
         return -1;
     }
 
-    /** Confere se a saída é positiva e não ultrapassa a quantidade disponível. */
+    // Confere se a saída é positiva e não ultrapassa a quantidade disponível.
     private static boolean podeRetirar(int quantidadeDisponivel, int quantidadeSaida) {
         return quantidadeSaida > 0 && quantidadeSaida <= quantidadeDisponivel;
     }
 
+    // Informa se a quantidade atual chegou ou ficou abaixo do estoque mínimo.
     private static boolean estaNoMinimo(int quantidadeAtual, int estoqueMinimo) {
         return quantidadeAtual <= estoqueMinimo;
     }
 
+    // Lê um texto digitado pelo usuário e remove espaços no começo e no fim.
     private static String lerTexto(String rotulo) {
         System.out.print(rotulo);
         return ENTRADA.nextLine().trim();
     }
 
+    // Garante que campos de texto tenham entre 2 e 80 caracteres.
     private static String lerTextoObrigatorio(String rotulo) {
         String texto = lerTexto(rotulo);
         if (texto.length() < 2 || texto.length() > 80) throw new IllegalArgumentException("Texto deve ter entre 2 e 80 caracteres.");
         return texto;
     }
 
-    /** Repete a pergunta até receber 11 números válidos, sem letras ou símbolos. */
+    // Repete a pergunta até receber 11 números válidos, sem letras ou símbolos.
     private static String lerCpf(String rotulo) {
         while (true) {
             String cpf = lerTexto(rotulo);
@@ -318,36 +340,42 @@ public class Main {
         }
     }
 
+    // Lê e confere se o e-mail possui o formato básico nome@dominio.com.
     private static String lerEmail() {
         String email = lerTexto("E-mail: ");
         if (!email.matches("[^\\s@]+@[^\\s@]+\\.[^\\s@]+")) throw new IllegalArgumentException("E-mail inválido.");
         return email;
     }
 
+    // Aceita somente uma opção numérica de um algarismo para os menus.
     private static int lerOpcao(String rotulo) {
         String texto = lerTexto(rotulo);
         if (!texto.matches("[0-9]")) throw new IllegalArgumentException("A opção deve ter somente um algarismo de 0 a 9.");
         return Integer.parseInt(texto);
     }
 
+    // Lê uma quantidade que pode ser zero, mas não pode ser negativa.
     private static int lerInteiroNaoNegativo(String rotulo) {
         int numero = lerInteiro(rotulo);
         if (numero < 0) throw new IllegalArgumentException("O valor não pode ser negativo.");
         return numero;
     }
 
+    // Lê uma quantidade obrigatoriamente maior que zero.
     private static int lerInteiroPositivo(String rotulo) {
         int numero = lerInteiro(rotulo);
         if (numero <= 0) throw new IllegalArgumentException("O valor deve ser maior que zero.");
         return numero;
     }
 
+    // Faz a validação básica antes de transformar o texto em número inteiro.
     private static int lerInteiro(String rotulo) {
         String texto = lerTexto(rotulo);
         if (!texto.matches("-?[0-9]{1,9}")) throw new IllegalArgumentException("Digite um inteiro com no máximo 9 algarismos.");
         return Integer.parseInt(texto);
     }
 
+    // Lê o preço do produto e aceita vírgula ou ponto como separador decimal.
     private static double lerPreco() {
         try {
             double preco = Double.parseDouble(lerTexto("Preço unitário (ex.: 19,90): ").replace(',', '.'));
@@ -358,7 +386,7 @@ public class Main {
         }
     }
 
-    /** Lê a alíquota percentual definida para aquele produto na simulação. */
+    // Lê a alíquota percentual definida para aquele produto na simulação.
     private static double lerAliquota() {
         try {
             double aliquota = Double.parseDouble(lerTexto("Alíquota tributária do produto (%): ").replace(',', '.'));
@@ -371,18 +399,22 @@ public class Main {
         }
     }
 
+    // Confere se o código do funcionário segue o padrão FUN-001.
     private static void validarCodigoFuncionario(String codigo) {
         if (!codigo.matches("FUN-[0-9]{3,6}")) throw new IllegalArgumentException("Use o formato FUN-001 até FUN-999999.");
     }
 
+    // Confere se o código do produto tem letras, números ou hífen.
     private static void validarCodigoProduto(String codigo) {
         if (!codigo.matches("[A-Z0-9-]{3,20}")) throw new IllegalArgumentException("Código do produto deve ter 3 a 20 caracteres.");
     }
 
+    // Impede novos cadastros quando o limite dos vetores for atingido.
     private static void verificarLimite(int total, String tipo) {
         if (total >= LIMITE) throw new IllegalArgumentException("Limite de " + LIMITE + " " + tipo + " atingido.");
     }
 
+    // Calcula os dois dígitos verificadores para confirmar se o CPF é válido.
     private static boolean cpfValido(String cpf) {
         if (!cpf.matches("[0-9]{11}") || cpf.matches("([0-9])\\1{10}")) return false;
         int soma = 0;
