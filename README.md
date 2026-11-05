@@ -40,6 +40,12 @@ Para executar os testes de robustez:
 java -cp out Main --teste
 ```
 
+## Persistencia dos dados
+
+Os cadastros, o estoque e o regime tributario sao salvos automaticamente em `estoque.txt`, no diretorio em que o programa e executado, e carregados na proxima inicializacao. O arquivo usa texto no formato chave-valor e pode ser removido para iniciar um cadastro novo.
+
+O arquivo contem dados pessoais, como CPF e e-mail, e nao e criptografado. Mantenha-o em um local protegido e nao o compartilhe.
+
 ## Regras principais
 
 - o funcionário deve existir antes do cadastro de produto e da entrada;

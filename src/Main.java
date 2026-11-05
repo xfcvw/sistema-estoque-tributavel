@@ -1,9 +1,18 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Properties;
 import java.util.Scanner;
 
 // Sistema de estoque feito com vetores e funções simples.
 public class Main {
-    static Scanner entrada = new Scanner(System.in);
+    static Scanner entrada = criarScanner();
     static final int LIMITE = 100;
+    static final String ARQUIVO_DADOS = "estoque.txt";
 
     // Dados dos clientes.
     static String[] cpfClientes = new String[LIMITE];
@@ -31,11 +40,33 @@ public class Main {
     // Guarda o regime tributário selecionado no início do sistema.
     static int regime = 1;
 
+    static Scanner criarScanner() {
+        java.io.Console console = System.console();
+        String charset = console == null
+                ? System.getProperty("native.encoding", StandardCharsets.UTF_8.name())
+                : console.charset().name();
+        return new Scanner(System.in, Charset.forName(charset));
+    }
+
     public static void main(String[] args) {
         int opcao;
 
         System.out.println("=== Sistema de Gerenciamento de Estoque Tributável ===");
-        regime = lerRegime();
+        boolean dadosExistentes;
+        try {
+            dadosExistentes = carregarDados();
+        } catch (IOException e) {
+            System.err.println("Não foi possível carregar " + ARQUIVO_DADOS + ": " + e.getMessage());
+            return;
+        }
+
+        if (dadosExistentes) {
+            System.out.println("Dados carregados de " + ARQUIVO_DADOS + ".");
+            System.out.println("Regime tributário: " + nomeRegime());
+        } else {
+            regime = lerRegime();
+            salvarDadosComAviso();
+        }
 
         do {
             mostrarMenu();
@@ -64,6 +95,7 @@ public class Main {
             }
         } while (opcao != 0);
 
+        salvarDadosComAviso();
         System.out.println("Sistema encerrado.");
     }
 
@@ -102,6 +134,7 @@ public class Main {
         cargoFuncionarios[totalFuncionarios] = lerTextoObrigatorio("Cargo: ");
         totalFuncionarios++;
 
+        salvarDadosComAviso();
         System.out.println("Funcionário cadastrado com sucesso.");
     }
 
@@ -126,6 +159,7 @@ public class Main {
         emailClientes[totalClientes] = lerEmail();
         totalClientes++;
 
+        salvarDadosComAviso();
         System.out.println("Cliente cadastrado com sucesso.");
     }
 
@@ -158,6 +192,7 @@ public class Main {
         responsavelProdutos[totalProdutos] = responsavel;
         totalProdutos++;
 
+        salvarDadosComAviso();
         System.out.println("Produto cadastrado com sucesso.");
     }
 
@@ -175,6 +210,7 @@ public class Main {
         String funcionario = lerCodigoFuncionarioExistente("Código do funcionário: ");
 
         quantidadeProdutos[produto] = quantidadeProdutos[produto] + quantidade;
+        salvarDadosComAviso();
         System.out.println("Entrada registrada por " + funcionario + ".");
     }
 
@@ -202,6 +238,7 @@ public class Main {
         }
 
         quantidadeProdutos[produto] = quantidadeProdutos[produto] - quantidade;
+        salvarDadosComAviso();
         System.out.println("Venda registrada com sucesso.");
     }
 
@@ -321,10 +358,148 @@ public class Main {
                 mostrarRelatorio();
             } else if (opcao == 2) {
                 regime = lerRegime();
+                salvarDadosComAviso();
             } else if (opcao != 0) {
                 System.out.println("Opção inválida.");
             }
         } while (opcao != 0);
+    }
+
+    // Carrega os dados textuais salvos; um arquivo inválido impede iniciar sem os dados.
+    static boolean carregarDados() throws IOException {
+        if (!Files.exists(Paths.get(ARQUIVO_DADOS))) {
+            return false;
+        }
+
+        Properties dados = new Properties();
+        try (BufferedReader leitor = Files.newBufferedReader(
+                Paths.get(ARQUIVO_DADOS), StandardCharsets.UTF_8)) {
+            try {
+                dados.load(leitor);
+            } catch (IllegalArgumentException e) {
+                throw new IOException("formato inválido no arquivo de dados.", e);
+            }
+        }
+
+        if (!"1".equals(dados.getProperty("versao"))) {
+            throw new IOException("versão do arquivo ausente ou não suportada.");
+        }
+
+        regime = lerInteiroSalvo(dados, "regime", 1, 3);
+        totalClientes = lerInteiroSalvo(dados, "totalClientes", 0, LIMITE);
+        totalFuncionarios = lerInteiroSalvo(dados, "totalFuncionarios", 0, LIMITE);
+        totalProdutos = lerInteiroSalvo(dados, "totalProdutos", 0, LIMITE);
+
+        for (int i = 0; i < totalClientes; i++) {
+            String prefixo = "cliente." + i + ".";
+            cpfClientes[i] = lerTextoSalvo(dados, prefixo + "cpf");
+            nomeClientes[i] = lerTextoSalvo(dados, prefixo + "nome");
+            emailClientes[i] = lerTextoSalvo(dados, prefixo + "email");
+        }
+
+        for (int i = 0; i < totalFuncionarios; i++) {
+            String prefixo = "funcionario." + i + ".";
+            codigoFuncionarios[i] = lerTextoSalvo(dados, prefixo + "codigo");
+            nomeFuncionarios[i] = lerTextoSalvo(dados, prefixo + "nome");
+            cargoFuncionarios[i] = lerTextoSalvo(dados, prefixo + "cargo");
+        }
+
+        for (int i = 0; i < totalProdutos; i++) {
+            String prefixo = "produto." + i + ".";
+            codigoProdutos[i] = lerTextoSalvo(dados, prefixo + "codigo");
+            nomeProdutos[i] = lerTextoSalvo(dados, prefixo + "nome");
+            categoriaProdutos[i] = lerTextoSalvo(dados, prefixo + "categoria");
+            precoProdutos[i] = lerDoubleSalvo(dados, prefixo + "preco", Double.MIN_VALUE, Double.MAX_VALUE);
+            aliquotaProdutos[i] = lerDoubleSalvo(dados, prefixo + "aliquota", 0, 100);
+            quantidadeProdutos[i] = lerInteiroSalvo(dados, prefixo + "quantidade", 0, Integer.MAX_VALUE);
+            minimoProdutos[i] = lerInteiroSalvo(dados, prefixo + "minimo", 0, Integer.MAX_VALUE);
+            responsavelProdutos[i] = lerTextoSalvo(dados, prefixo + "responsavel");
+        }
+
+        return true;
+    }
+
+    // Grava os cadastros e o regime em texto UTF-8.
+    static void salvarDados() throws IOException {
+        Properties dados = new Properties();
+        dados.setProperty("versao", "1");
+        dados.setProperty("regime", Integer.toString(regime));
+        dados.setProperty("totalClientes", Integer.toString(totalClientes));
+        dados.setProperty("totalFuncionarios", Integer.toString(totalFuncionarios));
+        dados.setProperty("totalProdutos", Integer.toString(totalProdutos));
+
+        for (int i = 0; i < totalClientes; i++) {
+            String prefixo = "cliente." + i + ".";
+            dados.setProperty(prefixo + "cpf", cpfClientes[i]);
+            dados.setProperty(prefixo + "nome", nomeClientes[i]);
+            dados.setProperty(prefixo + "email", emailClientes[i]);
+        }
+
+        for (int i = 0; i < totalFuncionarios; i++) {
+            String prefixo = "funcionario." + i + ".";
+            dados.setProperty(prefixo + "codigo", codigoFuncionarios[i]);
+            dados.setProperty(prefixo + "nome", nomeFuncionarios[i]);
+            dados.setProperty(prefixo + "cargo", cargoFuncionarios[i]);
+        }
+
+        for (int i = 0; i < totalProdutos; i++) {
+            String prefixo = "produto." + i + ".";
+            dados.setProperty(prefixo + "codigo", codigoProdutos[i]);
+            dados.setProperty(prefixo + "nome", nomeProdutos[i]);
+            dados.setProperty(prefixo + "categoria", categoriaProdutos[i]);
+            dados.setProperty(prefixo + "preco", Double.toString(precoProdutos[i]));
+            dados.setProperty(prefixo + "aliquota", Double.toString(aliquotaProdutos[i]));
+            dados.setProperty(prefixo + "quantidade", Integer.toString(quantidadeProdutos[i]));
+            dados.setProperty(prefixo + "minimo", Integer.toString(minimoProdutos[i]));
+            dados.setProperty(prefixo + "responsavel", responsavelProdutos[i]);
+        }
+
+        try (BufferedWriter escritor = Files.newBufferedWriter(
+                Paths.get(ARQUIVO_DADOS), StandardCharsets.UTF_8)) {
+            dados.store(escritor, "Dados do Sistema de Gerenciamento de Estoque");
+        }
+    }
+
+    static void salvarDadosComAviso() {
+        try {
+            salvarDados();
+        } catch (IOException e) {
+            System.err.println("Não foi possível salvar os dados em " + ARQUIVO_DADOS + ": " + e.getMessage());
+        }
+    }
+
+    static String lerTextoSalvo(Properties dados, String chave) throws IOException {
+        String valor = dados.getProperty(chave);
+        if (valor == null) {
+            throw new IOException("campo obrigatório ausente: " + chave);
+        }
+        return valor;
+    }
+
+    static int lerInteiroSalvo(Properties dados, String chave, int minimo, int maximo)
+            throws IOException {
+        try {
+            int valor = Integer.parseInt(lerTextoSalvo(dados, chave));
+            if (valor < minimo || valor > maximo) {
+                throw new IOException("valor fora do intervalo no campo: " + chave);
+            }
+            return valor;
+        } catch (NumberFormatException e) {
+            throw new IOException("número inválido no campo: " + chave, e);
+        }
+    }
+
+    static double lerDoubleSalvo(Properties dados, String chave, double minimo, double maximo)
+            throws IOException {
+        try {
+            double valor = Double.parseDouble(lerTextoSalvo(dados, chave));
+            if (!Double.isFinite(valor) || valor < minimo || valor > maximo) {
+                throw new IOException("valor fora do intervalo no campo: " + chave);
+            }
+            return valor;
+        } catch (NumberFormatException e) {
+            throw new IOException("número inválido no campo: " + chave, e);
+        }
     }
 
     // Calcula os valores do estoque e os tributos estimados.
@@ -783,7 +958,6 @@ public class Main {
                 return i;
             }
         }
-
         return -1;
     }
 }

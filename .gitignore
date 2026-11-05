@@ -4,5 +4,6 @@ out/
 *.iml
 .vscode/
 *.log
+estoque.txt
 .DS_Store
 Thumbs.db
