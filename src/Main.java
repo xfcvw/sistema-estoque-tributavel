@@ -1,3 +1,7 @@
+// Nome: José Elias Hermínio Mendes
+// Nome: Vinicius Barbosa Fialho 
+// Nome: Vinicius Salgado
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
